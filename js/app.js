@@ -65,31 +65,29 @@ loader.load("models/test.glb",
 );
 
 
-const clock = new THREE.Clock();
-const rotationMatrix = new THREE.Matrix4();
-const targetQuaternion = new THREE.Quaternion();
-const speed = 2;
-document.onkeydown = (event) => {
-  if (event.key === "a") {
-    const delta = clock.getDelta();
+// Pointer setup (for clicking planets
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+function onPointerMove( event ) {
+  pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+  pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+}
 
-    rotationMatrix.lookAt( camera.position, planet.model.position, planet.model.up );
-    targetQuaternion.setFromRotationMatrix( rotationMatrix );
+window.addEventListener( 'pointermove', onPointerMove );
 
-    if ( ! camera.quaternion.equals(targetQuaternion) ) {
-      const step = speed * delta;
-      camera.quaternion.rotateTowards( targetQuaternion, step );
-    }
+document.onmousedown = (event) => {
+  raycaster.setFromCamera( pointer, camera );
+  const intersects = raycaster.intersectObjects( scene.children );
 
-
-    camera.position.addVectors(planet.model.position, new THREE.Vector3(5, 1, 0));
-    arcballControls.update()
+  if (intersects.length > 0) {
+    console.log("test");
   }
 }
 
+// Main loop
 function animate() {
-  planet.updateOrbit();
 
+  planet.updateOrbit();
   composer.render()
 }
 

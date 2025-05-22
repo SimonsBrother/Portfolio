@@ -1,4 +1,6 @@
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader';
+import * as THREE from "three";
+import {Vector2} from "three";
 
 const loader = new GLTFLoader();
 
@@ -13,16 +15,20 @@ function radians(degrees) {
   return (degrees * Math.PI) / 180.0;
 }
 
+export const r = radians;
+
 export class Planet {
   static count = 0;
 
-  constructor(modelPath, orbitDistance, initialAngle, orbitOrientation, orbitSpeed, centre, scene) {
+  constructor(modelPath, orbitRadius, orbitInitialAngle, orbitSpeed, scene,
+              orbitOrientation = new THREE.Euler(0, 0, 0),
+              orbitCentre = new THREE.Vector3(0, 0, 0)) {
     this.modelPath = modelPath;
-    this.orbitDistance = orbitDistance;
-    this.initialAngle = initialAngle;
-    this.orbitOrientation = orbitOrientation;
+    this.orbitDistance = orbitRadius;
+    this.initialAngle = orbitInitialAngle;
     this.orbitSpeed = orbitSpeed;
-    this.centre = centre;
+    this.orbitOrientation = orbitOrientation;
+    this.centre = orbitCentre;
 
     this.model = null;
 
@@ -30,8 +36,19 @@ export class Planet {
     loader.load("models/test.glb",
       (gltf) => {
         this.model = gltf.scene;
+
+        // Placeholder parent to store, position, and orient both the planet and its orbit
+        this.parent = new THREE.Object3D();
+        this.parent.position.set(...this.centre);
+        this.parent.rotation.set(...this.orbitOrientation);
+        this.parent.add(this.model);
+
+        // Add orbit line
+        this.parent.add(this.makeOrbitLine());
+
+        // Update orbit and add to scene
         this.updateOrbit();
-        scene.add(this.model);
+        scene.add(this.parent);
       },
       undefined,
       (error) => {
@@ -49,5 +66,14 @@ export class Planet {
 
     this.model.position.x = this.orbitDistance * Math.cos(angle) + this.centre.x;
     this.model.position.z = this.orbitDistance * Math.sin(angle) + this.centre.z;
+  }
+
+  static orbitLineWidth = 0.02;
+  makeOrbitLine() {
+    const geometry = new THREE.RingGeometry( this.orbitDistance, this.orbitDistance + Planet.orbitLineWidth, 50 );
+    const material = new THREE.MeshBasicMaterial( { color: 0x555555, side: THREE.DoubleSide } );
+    const mesh = new THREE.Mesh( geometry, material );
+    mesh.rotation.x = Math.PI / 2;
+    return mesh;
   }
 }

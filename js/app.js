@@ -1,17 +1,17 @@
 import * as THREE from "three";
-import { OrbitControls } from 'three/addons/controls/OrbitControls';
 import { ArcballControls } from 'three/addons/controls/ArcballControls';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass';
 import {UnrealBloomPass} from "three/addons/postprocessing/UnrealBloomPass";
+import { SMAAPass } from 'three/addons/postprocessing/SMAAPass';
 
-import { Planet } from "./planets";
+import { Planet, r } from "./planets";
 
 // Scene
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0, 0, 0)
 const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-camera.position.set(0, 3, 15)
+camera.position.set(0, 0, 15)
 
 // Renderer
 const renderer = new THREE.WebGLRenderer();
@@ -25,11 +25,13 @@ composer.addPass(new RenderPass(scene, camera));
 // Bloom
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  1.5,
+  1,
   0.4,
   0
 );
 composer.addPass( bloomPass );
+const antialiasing = new SMAAPass();
+composer.addPass(antialiasing);
 
 // TEMP LIGHT
 const light = new THREE.DirectionalLight( 0xffffff, 1);
@@ -39,12 +41,11 @@ scene.add( light );
 const planet = new Planet("models/test.glb",
   10,
   0,
-  null,
   100,
-  new THREE.Vector3(0, 0, 0),
-  scene
+  scene,
+  //new THREE.Euler(r(0), r(0), r(45)),
+  //new THREE.Vector3(0, 0, 0)
 );
-
 
 
 const arcballControls = new ArcballControls(camera, renderer.domElement);
@@ -75,7 +76,7 @@ function onPointerMove( event ) {
 
 window.addEventListener( 'pointermove', onPointerMove );
 
-document.onmousedown = (event) => {
+document.onmousedown = () => {
   raycaster.setFromCamera( pointer, camera );
   const intersects = raycaster.intersectObjects( scene.children );
 

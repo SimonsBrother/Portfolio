@@ -1,6 +1,5 @@
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader';
 import * as THREE from "three";
-import {Vector2} from "three";
 
 const loader = new GLTFLoader();
 
@@ -20,13 +19,15 @@ export const r = radians;
 export class Planet {
   static count = 0;
 
-  constructor(modelPath, orbitRadius, orbitInitialAngle, orbitSpeed, scene,
+  constructor(modelPath, scene, orbitRadius, orbitInitialAngle, orbitSpeed,
+              planetRotationSpeed = new THREE.Euler(0, 0.1, 0),
               orbitOrientation = new THREE.Euler(0, 0, 0),
               orbitCentre = new THREE.Vector3(0, 0, 0)) {
     this.modelPath = modelPath;
     this.orbitDistance = orbitRadius;
     this.initialAngle = orbitInitialAngle;
     this.orbitSpeed = orbitSpeed;
+    this.planetRotationSpeed = planetRotationSpeed;
     this.orbitOrientation = orbitOrientation;
     this.centre = orbitCentre;
 
@@ -62,10 +63,15 @@ export class Planet {
   updateOrbit() {
     if (this.model == null) return
 
-    let angle = radians(this.initialAngle + this.orbitSpeed * getElapsedTime());
+    const time = getElapsedTime();
 
+    let angle = radians(this.initialAngle + this.orbitSpeed * time);
     this.model.position.x = this.orbitDistance * Math.cos(angle) + this.centre.x;
     this.model.position.z = this.orbitDistance * Math.sin(angle) + this.centre.z;
+
+    this.model.rotation.x = this.planetRotationSpeed.x * time;
+    this.model.rotation.y = this.planetRotationSpeed.y * time;
+    this.model.rotation.z = this.planetRotationSpeed.z * time;
   }
 
   static orbitLineWidth = 0.02;

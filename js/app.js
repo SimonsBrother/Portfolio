@@ -38,12 +38,12 @@ const light = new THREE.DirectionalLight( 0xffffff, 1);
 light.position.set( 3, -5, 3 );
 scene.add( light );
 
-const planet = new Planet("models/test.glb",
+const planet = new Planet("models/test.glb", scene,
   10,
   0,
   100,
-  scene,
-  //new THREE.Euler(r(0), r(0), r(45)),
+  new THREE.Euler(r(300), r(3), r(5)),
+  new THREE.Euler(r(0), r(0), r(45)),
   //new THREE.Vector3(0, 0, 0)
 );
 

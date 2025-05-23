@@ -1,5 +1,11 @@
 import * as THREE from "three";
 
+let camera = null;
+let controls = null;
+export function setupFocus(camera_, controls_) {
+  camera = camera_;
+  controls = controls_;
+}
 
 // TODO make it so only planets can be followed
 let followTarget = null;
@@ -7,27 +13,26 @@ const defaultMultiplier = 5
 let distanceMultiplier = defaultMultiplier; // distance from the object when focussing
 const distMultLimits = {min: 4, max: 8};
 
-let focusStartTime = null;
-let preFocusPos = null;
-let atTarget = false;
 let targetPos = null;
-let intendedCameraPosition = null;
+let targetFov = -1;
 
 function lerp(start, end, t) {
   return start + (end - start) * t;
 }
 
-export function setFollowTarget(object, controls, camera) {
+export function setFollowTarget(object) {
   followTarget = object;
   controls.enablePan = false;
-  focusStartTime = performance.now();
-  preFocusPos = camera.position;
-  atTarget = false;
+  controls.enableZoom = false;
 }
 
-export function stopFollowing(controls) {
+export function stopFollowing() {
   followTarget = null;
   controls.enablePan = true;
+  controls.enableZoom = true;
+
+  smoothlyUnfocus();
+  controls.update();
 }
 
 export function changeZoom(event) {
@@ -40,7 +45,7 @@ export function changeZoom(event) {
   }
 }
 
-export function calculateCenterAndCamPos(controls, camera) {
+export function calculateCenterAndCamPos() {
   if (followTarget === null) {
     return;
   }
@@ -52,47 +57,43 @@ export function calculateCenterAndCamPos(controls, camera) {
 
   // Calculate appropriate distance (zoom out more if object is bigger)
   const maxDimension = Math.max(size.x, size.y, size.z);
-  const distance = maxDimension * distanceMultiplier; // Adjust multiplier as needed
+  //const distance = maxDimension * distanceMultiplier; // Adjust multiplier as needed
+  const distance = camera.position.distanceTo(center);
+  const margin = 5;
 
-  // Get target position
-  const direction = camera.position.clone().sub(center).normalize();
-  intendedCameraPosition = center.clone().add(direction.multiplyScalar(distance));
   targetPos = center;
+  targetFov = 2 * Math.atan((maxDimension * margin) / (2 * distance)) * (180 / Math.PI);
 
-  //controls.target.copy(center);
-  //camera.position.copy(intend)
-  console.log(intendedCameraPosition);
-
-  controls.update();
+  controls.update(); // This updates the target update in updateFocusTarget
 }
 
 
-export function updateFocusTarget(controls, camera) {
-  if (targetPos === null || intendedCameraPosition === null) {
+export function updateFocusTarget() {
+  if (targetPos === null || followTarget === null) {
     return;
   }
-  controls.target.copy(targetPos);
-  if (atTarget) {
-    //camera.fov = 20;
-    camera.updateProjectionMatrix();
-    camera.position.copy(intendedCameraPosition);
-  }
+  controls.target.copy(targetPos); // Must not be updated or else the camera locks on instead. Not sure why.
+  //camera.fov = targetFov;
+  camera.updateProjectionMatrix();
 }
 
 
-export function smoothFocusOnObject(object, controls, camera, duration = 1000) {
+export function smoothFocusOnObject(duration = 1000) {
   const worldPosition = new THREE.Vector3();
-  object.getWorldPosition(worldPosition);
+  followTarget.getWorldPosition(worldPosition);
 
   const startTarget = controls.target.clone();
-  const cameraStartPos = camera.position.clone();
   let endTarget = worldPosition.clone();
+  const startFov = camera.fov;
 
   const startTime = performance.now();
 
   function animate() {
+    if (followTarget === null) {
+      return;
+    }
     const worldPosition = new THREE.Vector3();
-    object.getWorldPosition(worldPosition);
+    followTarget.getWorldPosition(worldPosition);
     endTarget = worldPosition;
     const elapsed = performance.now() - startTime;
     const progress = Math.min(elapsed / duration, 1);
@@ -101,18 +102,36 @@ export function smoothFocusOnObject(object, controls, camera, duration = 1000) {
     const easeProgress = 1 - Math.pow(1 - progress, 3);
 
     controls.target.lerpVectors(startTarget, endTarget, easeProgress);
-    if (intendedCameraPosition) {
-      //camera.position.lerpVectors(cameraStartPos, intendedCameraPosition, easeProgress);
-    }
-    distanceMultiplier = lerp(distanceMultiplier, defaultMultiplier, easeProgress);
+    camera.fov = lerp(startFov, targetFov, easeProgress);
+    camera.updateProjectionMatrix();
 
     controls.update();
 
     if (progress < 1) {
       requestAnimationFrame(animate);
     }
-    else {
-      atTarget = true;
+  }
+
+  animate();
+}
+
+function smoothlyUnfocus(duration = 1000) {
+  const startFov = camera.fov;
+
+  const startTime = performance.now();
+
+  function animate() {
+    const elapsed = performance.now() - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    // Smooth easing function
+    const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+    camera.fov = lerp(startFov, 75, easeProgress);
+    camera.updateProjectionMatrix();
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
     }
   }
 

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { ArcballControls } from 'three/addons/controls/ArcballControls';
+import { OrbitControls } from 'three/addons/controls/OrbitControls';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass';
 import {UnrealBloomPass} from "three/addons/postprocessing/UnrealBloomPass";
@@ -7,12 +8,13 @@ import { SMAAPass } from 'three/addons/postprocessing/SMAAPass';
 
 import { Planet, r } from "./planets";
 import {
+  setupFocus,
   calculateCenterAndCamPos,
   setFollowTarget,
+  updateFocusTarget,
   stopFollowing,
   changeZoom,
   smoothFocusOnObject,
-  updateFocusTarget
 } from "./focus";
 
 // Scene
@@ -28,8 +30,9 @@ document.body.appendChild( renderer.domElement );
 // Camera
 export const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 0, 15)
-const arcballControls = new ArcballControls(camera, renderer.domElement);
+const arcballControls = new OrbitControls(camera, renderer.domElement)//new ArcballControls(camera, renderer.domElement);
 arcballControls.update();
+setupFocus(camera, arcballControls);
 
 // Post processing
 export let composer = new EffectComposer(renderer);
@@ -88,20 +91,22 @@ document.onmousedown = () => {
 
   if (intersects.length > 0) {
     const clickedObject = intersects[0].object;
-    smoothFocusOnObject(clickedObject, arcballControls, camera)
-    setFollowTarget(clickedObject, arcballControls, camera);
+    setFollowTarget(clickedObject);
+    smoothFocusOnObject()
   }
 }
 
-document.addEventListener('mousewheel', changeZoom, {capture: false, passive: false});
+//document.addEventListener("mousewheel", changeZoom, {capture: false, passive: false});
+document.addEventListener("keydown", stopFollowing)
 
 
 // Main loop
 function animate() {
-  calculateCenterAndCamPos(arcballControls, camera);
-  updateFocusTarget(arcballControls, camera);
+  calculateCenterAndCamPos();
+  updateFocusTarget();
   Planet.updateAllOrbits();
   composer.render();
+  console.log(arcballControls.rotateSpeed);
 }
 
 renderer.setAnimationLoop(animate);

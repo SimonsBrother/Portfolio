@@ -6,12 +6,18 @@ import {UnrealBloomPass} from "three/addons/postprocessing/UnrealBloomPass";
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass';
 
 import { Planet, r } from "./planets";
+import {
+  calculateCenterAndCamPos,
+  setFollowTarget,
+  stopFollowing,
+  changeZoom,
+  smoothFocusOnObject,
+  updateFocusTarget
+} from "./focus";
 
 // Scene
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0, 0, 0)
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-camera.position.set(0, 0, 15)
 
 // Renderer
 const renderer = new THREE.WebGLRenderer();
@@ -19,8 +25,14 @@ renderer.toneMapping = THREE.ReinhardToneMapping;
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
-// Post-processing
-let composer = new EffectComposer(renderer);
+// Camera
+export const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 0, 15)
+const arcballControls = new ArcballControls(camera, renderer.domElement);
+arcballControls.update();
+
+// Post processing
+export let composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 // Bloom
 const bloomPass = new UnrealBloomPass(
@@ -29,7 +41,7 @@ const bloomPass = new UnrealBloomPass(
   0.4,
   0
 );
-composer.addPass( bloomPass );
+composer.addPass(bloomPass);
 const antialiasing = new SMAAPass();
 composer.addPass(antialiasing);
 
@@ -38,22 +50,19 @@ const light = new THREE.DirectionalLight( 0xffffff, 1);
 light.position.set( 3, -5, 3 );
 scene.add( light );
 
+// TEMP PLANET
 const planet = new Planet("models/test.glb", scene,
   10,
   0,
-  100,
-  new THREE.Euler(r(300), r(3), r(5)),
-  new THREE.Euler(r(0), r(0), r(45)),
+  10,
+  new THREE.Euler(r(0), r(0), r(0)),
+  new THREE.Euler(r(0), r(0), r(0)),
   //new THREE.Vector3(0, 0, 0)
 );
 
-
-const arcballControls = new ArcballControls(camera, renderer.domElement);
-arcballControls.update();
-
+// TEMP CENTRE MODEL
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader';
 const loader = new GLTFLoader();
-
 loader.load("models/test.glb",
   (gltf) => {
     const model = gltf.scene;
@@ -66,30 +75,33 @@ loader.load("models/test.glb",
 );
 
 
-// Pointer setup (for clicking planets
+// Pointer setup (for clicking planets)
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
-function onPointerMove( event ) {
+window.onpointermove = ( event ) => {
   pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
   pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 }
-
-window.addEventListener( 'pointermove', onPointerMove );
-
 document.onmousedown = () => {
   raycaster.setFromCamera( pointer, camera );
   const intersects = raycaster.intersectObjects( scene.children );
 
   if (intersects.length > 0) {
-    console.log("test");
+    const clickedObject = intersects[0].object;
+    smoothFocusOnObject(clickedObject, arcballControls, camera)
+    setFollowTarget(clickedObject, arcballControls, camera);
   }
 }
 
+document.addEventListener('mousewheel', changeZoom, {capture: false, passive: false});
+
+
 // Main loop
 function animate() {
-
-  planet.updateOrbit();
-  composer.render()
+  calculateCenterAndCamPos(arcballControls, camera);
+  updateFocusTarget(arcballControls, camera);
+  Planet.updateAllOrbits();
+  composer.render();
 }
 
 renderer.setAnimationLoop(animate);

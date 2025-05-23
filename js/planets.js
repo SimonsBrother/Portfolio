@@ -18,6 +18,7 @@ export const r = radians;
 
 export class Planet {
   static count = 0;
+  static planets = [];
 
   constructor(modelPath, scene, orbitRadius, orbitInitialAngle, orbitSpeed,
               planetRotationSpeed = new THREE.Euler(0, 0.1, 0),
@@ -58,6 +59,7 @@ export class Planet {
     );
 
     Planet.count++;
+    Planet.planets.push(this);
   }
 
   updateOrbit() {
@@ -81,5 +83,11 @@ export class Planet {
     const mesh = new THREE.Mesh( geometry, material );
     mesh.rotation.x = Math.PI / 2;
     return mesh;
+  }
+
+  static updateAllOrbits() {
+    for (const planet of Planet.planets) {
+      planet.updateOrbit();
+    }
   }
 }

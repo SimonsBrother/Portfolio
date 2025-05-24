@@ -4,6 +4,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass';
 import {UnrealBloomPass} from "three/addons/postprocessing/UnrealBloomPass";
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass';
+import {OutlinePass} from 'three/addons/postprocessing/OutlinePass';
 
 import { Planet } from "./planets";
 import {
@@ -37,11 +38,20 @@ composer.addPass(new RenderPass(scene, camera));
 // Bloom
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  1,
-  0.4,
+    .7,
+  0.1,
   0
 );
 composer.addPass(bloomPass);
+
+export const outlinePass = new OutlinePass( new THREE.Vector2( window.innerWidth, window.innerHeight ), scene, camera );
+outlinePass.edgeStrength = 3;
+outlinePass.edgeGlow = 1;
+outlinePass.edgeThickness = 2;
+outlinePass.visibleEdgeColor = new THREE.Color( 0xffffff );
+outlinePass.hiddenEdgeColor = new THREE.Color( 0xffffff );
+composer.addPass(outlinePass);
+
 const antialiasing = new SMAAPass();
 composer.addPass(antialiasing);
 
@@ -78,17 +88,17 @@ loader.load("models/test.glb",
 // Pointer setup (for focussing on planets)
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
+let intersects = [];
 window.onpointermove = ( event ) => {
   pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
   pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+  raycaster.setFromCamera( pointer, camera );
+  intersects = raycaster.intersectObjects( scene.children );
 }
 document.onmouseup = () => {
-  raycaster.setFromCamera( pointer, camera );
-  const intersects = raycaster.intersectObjects( scene.children );
-
   if (intersects.length > 0) {
-    const clickedObject = intersects[0].object;
-    setFollowTarget(clickedObject);
+    setFollowTarget(intersects[0].object);
   }
 }
 

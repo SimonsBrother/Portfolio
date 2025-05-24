@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { outlinePass } from "./app";
 
 // For ease of access, rather than having params for them in every function
 let camera = null;
@@ -32,6 +33,7 @@ export function setFollowTarget(object) {
   controls.enableZoom = false;
   targetMaxSize = 0;
 
+  outlinePass.selectedObjects = [object.parent];
   smoothFocusOnObject();
 }
 
@@ -41,6 +43,7 @@ export function stopFollowing() {
   controls.enablePan = true;
   controls.enableZoom = true;
 
+  outlinePass.selectedObjects = [];
   smoothlyUnfocus();
 }
 

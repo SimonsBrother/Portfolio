@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { ArcballControls } from 'three/addons/controls/ArcballControls';
 import { OrbitControls } from 'three/addons/controls/OrbitControls';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass';
@@ -56,9 +55,9 @@ const planet = new Planet("models/test.glb", scene,
   10,
   0,
   10,
-  new THREE.Euler(r(0), r(0), r(0)),
-  new THREE.Euler(r(0), r(0), r(0)),
-  //new THREE.Vector3(0, 0, 0)
+  new THREE.Euler(360, 0, 0),
+  new THREE.Euler(0, 0, 0),
+  new THREE.Vector3(0, -5, 0)
 );
 
 // TEMP CENTRE MODEL
@@ -83,7 +82,7 @@ window.onpointermove = ( event ) => {
   pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
   pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 }
-document.onmousedown = () => {
+document.onmouseup = () => {
   raycaster.setFromCamera( pointer, camera );
   const intersects = raycaster.intersectObjects( scene.children );
 
@@ -100,7 +99,7 @@ document.addEventListener("keydown", stopFollowing)
 function animate() {
   calculateTargetValues();
   updateFocusTarget();
-  Planet.updateAllOrbits();
+  Planet.updateAllPlanets();
   composer.render();
 }
 

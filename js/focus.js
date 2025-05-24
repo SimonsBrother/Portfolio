@@ -14,12 +14,17 @@ let followTarget = null; // TODO make it so only planets can be followed
 
 let targetPos = null; // The global position of the target object
 let targetFov = -1; // The target FOV of the camera
+let targetMaxSize = 0; // The largest size the bounding box of the target has been; important for rotating objects
+
+const fovMargin = 4; // The margin of the field of view during focussing
+const unfocussedFov = 75;
 
 
 export function setFollowTarget(object) {
   followTarget = object;
   controls.enablePan = false;
   controls.enableZoom = false;
+  targetMaxSize = 0;
 
   smoothFocusOnObject();
 }
@@ -47,11 +52,18 @@ export function calculateTargetValues() {
 
   // Calculate appropriate distance (zoom out more if object is bigger)
   const maxDimension = Math.max(size.x, size.y, size.z);
+  // Keep track of the max size; this is because the size of the box changes shape with rotation, causing the fov to change rapidly.
+  if (maxDimension > targetMaxSize) targetMaxSize = maxDimension;
   const distance = camera.position.distanceTo(center);
-  const margin = 4;
 
+  targetFov = 2 * Math.atan((targetMaxSize * fovMargin) / (2 * distance)) * (180 / Math.PI); // Formula by Claude
+
+  /*if (targetPos === null) {
+    targetPos = new THREE.Vector3();
+  }
+  followTarget.getWorldPosition(targetPos);
+  console.log(targetPos);*/
   targetPos = center;
-  targetFov = 2 * Math.atan((maxDimension * margin) / (2 * distance)) * (180 / Math.PI);
 
   // This updates the changes to the camera made in updateFocusTarget; this must be done here else it will jump instead of lerp
   controls.update();
@@ -127,7 +139,7 @@ function smoothlyUnfocus(duration = 1000) {
     // Smooth easing function
     const easeProgress = 1 - Math.pow(1 - progress, 3);
 
-    camera.fov = lerp(startFov, 75, easeProgress);
+    camera.fov = lerp(startFov, unfocussedFov, easeProgress);
     camera.updateProjectionMatrix();
 
     if (progress < 1) {

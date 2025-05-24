@@ -102,7 +102,6 @@ function animate() {
   updateFocusTarget();
   Planet.updateAllOrbits();
   composer.render();
-  console.log(camera.fov);
 }
 
 renderer.setAnimationLoop(animate);

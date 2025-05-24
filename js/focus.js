@@ -47,14 +47,15 @@ export function calculateTargetValues() {
 
   // Calculate appropriate distance (zoom out more if object is bigger)
   const maxDimension = Math.max(size.x, size.y, size.z);
-  //const distance = maxDimension * distanceMultiplier; // Adjust multiplier as needed
   const distance = camera.position.distanceTo(center);
-  const margin = 5;
+  const margin = 4;
 
   targetPos = center;
   targetFov = 2 * Math.atan((maxDimension * margin) / (2 * distance)) * (180 / Math.PI);
 
-  controls.update(); // This updates the target update in updateFocusTarget
+  // This updates the changes to the camera made in updateFocusTarget; this must be done here else it will jump instead of lerp
+  controls.update();
+  camera.updateProjectionMatrix();
 }
 
 
@@ -63,8 +64,8 @@ export function updateFocusTarget() {
   if (targetPos === null || followTarget === null) {
     return;
   }
-  controls.target.copy(targetPos); // Must not be updated or else the camera locks on instead. Not sure why.
-  camera.updateProjectionMatrix();
+  controls.target.copy(targetPos); // Must not be updated or else the camera snaps
+  camera.fov = targetFov;
 }
 
 

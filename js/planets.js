@@ -54,7 +54,6 @@ export class Planet {
               planetRotationSpeed = new THREE.Euler(0, 0.1, 0),
               orbitOrientation = new THREE.Euler(0, 0, 0),
               orbitCentre = new THREE.Vector3(0, 0, 0)) {
-    this.modelPath = modelPath;
     this.orbitDistance = orbitRadius;
     this.initialAngle = orbitInitialAngle;
     this.orbitSpeed = orbitSpeed;
@@ -68,6 +67,7 @@ export class Planet {
     loader.load("models/test.glb",
       (gltf) => {
         this.model = gltf.scene;
+        this.model.userData.isSelectable = true;
 
         // Placeholder parent to store, position, and orient both the planet and its orbit
         this.parent = new THREE.Object3D();
@@ -77,6 +77,21 @@ export class Planet {
 
         // Add orbit line
         this.parent.add(this.makeOrbitLine());
+
+        /* UNUSED
+        // Create hitbox so that parts of the model aren't selectable
+        // Create bounding box of model
+        const hitboxMargin = 0.1; // How much bigger the hitbox should be than the model
+        const modelBox = new THREE.Box3().setFromObject(this.model);
+        const modelBoxSize = modelBox.getSize(new THREE.Vector3());
+        const modelCenter = modelBox.getCenter(new THREE.Vector3());
+        // Create box geometry from box size
+        const geometry = new THREE.BoxGeometry(modelBoxSize.x + hitboxMargin, modelBoxSize.y + hitboxMargin, modelBoxSize.z + hitboxMargin);
+        const hitbox = new THREE.Mesh(geometry);
+        hitbox.material.visible = false;
+        this.model.add(hitbox);
+        hitbox.position.set(...modelCenter); // Offset bounding box so it properly covers model
+        */
 
         // Update orbit and add to scene
         this.updatePlanet();

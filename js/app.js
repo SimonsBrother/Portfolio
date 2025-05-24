@@ -5,7 +5,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass';
 import {UnrealBloomPass} from "three/addons/postprocessing/UnrealBloomPass";
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass';
 
-import { Planet, r } from "./planets";
+import { Planet } from "./planets";
 import {
   setupFocus,
   calculateTargetValues,
@@ -31,7 +31,7 @@ const arcballControls = new OrbitControls(camera, renderer.domElement)//new Arcb
 arcballControls.update();
 setupFocus(camera, arcballControls);
 
-// Post processing
+// Post-processing
 export let composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 // Bloom
@@ -51,13 +51,13 @@ light.position.set( 3, -5, 3 );
 scene.add( light );
 
 // TEMP PLANET
-const planet = new Planet("models/test.glb", scene,
+new Planet("models/test.glb", scene,
   10,
   0,
   10,
   new THREE.Euler(360, 0, 0),
   new THREE.Euler(0, 0, 0),
-  new THREE.Vector3(0, -5, 0)
+  new THREE.Vector3(0, 0, 0)
 );
 
 // TEMP CENTRE MODEL

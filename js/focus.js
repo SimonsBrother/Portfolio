@@ -21,7 +21,10 @@ const unfocussedFov = 75;
 
 
 export function setFollowTarget(object) {
-  if (object.parent.userData.isSelectable !== true) {
+  if (!object.parent || // If there is no parent, or
+      (!object.parent.userData.isSelectable || // (a parent therefore exists) the parent is not selectable, or
+        (followTarget && object.parent.uuid === followTarget.uuid))) // if there is currently a followed target and that target is the same as the new target
+  {
     return;
   }
   followTarget = object.parent;

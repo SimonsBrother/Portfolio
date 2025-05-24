@@ -9,12 +9,10 @@ import { SMAAPass } from 'three/addons/postprocessing/SMAAPass';
 import { Planet, r } from "./planets";
 import {
   setupFocus,
-  calculateCenterAndCamPos,
+  calculateTargetValues,
   setFollowTarget,
   updateFocusTarget,
   stopFollowing,
-  changeZoom,
-  smoothFocusOnObject,
 } from "./focus";
 
 // Scene
@@ -78,7 +76,7 @@ loader.load("models/test.glb",
 );
 
 
-// Pointer setup (for clicking planets)
+// Pointer setup (for focussing on planets)
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 window.onpointermove = ( event ) => {
@@ -92,21 +90,19 @@ document.onmousedown = () => {
   if (intersects.length > 0) {
     const clickedObject = intersects[0].object;
     setFollowTarget(clickedObject);
-    smoothFocusOnObject()
   }
 }
 
-//document.addEventListener("mousewheel", changeZoom, {capture: false, passive: false});
 document.addEventListener("keydown", stopFollowing)
 
 
 // Main loop
 function animate() {
-  calculateCenterAndCamPos();
+  calculateTargetValues();
   updateFocusTarget();
   Planet.updateAllOrbits();
   composer.render();
-  console.log(arcballControls.rotateSpeed);
+  console.log(camera.fov);
 }
 
 renderer.setAnimationLoop(animate);

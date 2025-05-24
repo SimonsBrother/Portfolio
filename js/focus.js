@@ -1,5 +1,6 @@
 import * as THREE from "three";
 
+// For ease of access, rather than having params for them in every function
 let camera = null;
 let controls = null;
 export function setupFocus(camera_, controls_) {
@@ -7,24 +8,22 @@ export function setupFocus(camera_, controls_) {
   controls = controls_;
 }
 
-// TODO make it so only planets can be followed
-let followTarget = null;
-const defaultMultiplier = 5
-let distanceMultiplier = defaultMultiplier; // distance from the object when focussing
-const distMultLimits = {min: 4, max: 8};
 
-let targetPos = null;
-let targetFov = -1;
+// The object that the camera will attempt to follow.
+let followTarget = null; // TODO make it so only planets can be followed
 
-function lerp(start, end, t) {
-  return start + (end - start) * t;
-}
+let targetPos = null; // The global position of the target object
+let targetFov = -1; // The target FOV of the camera
+
 
 export function setFollowTarget(object) {
   followTarget = object;
   controls.enablePan = false;
   controls.enableZoom = false;
+
+  smoothFocusOnObject();
 }
+
 
 export function stopFollowing() {
   followTarget = null;
@@ -32,20 +31,11 @@ export function stopFollowing() {
   controls.enableZoom = true;
 
   smoothlyUnfocus();
-  controls.update();
 }
 
-export function changeZoom(event) {
-  // deltaY is negative when zooming in
-  if (event.deltaY < 0 && distanceMultiplier >= distMultLimits.min) {
-    distanceMultiplier -= 1
-  }
-  else if (event.deltaY > 0 && distanceMultiplier <= distMultLimits.max) {
-    distanceMultiplier += 1
-  }
-}
 
-export function calculateCenterAndCamPos() {
+// Calculates the intended control target position and FOV
+export function calculateTargetValues() {
   if (followTarget === null) {
     return;
   }
@@ -68,16 +58,23 @@ export function calculateCenterAndCamPos() {
 }
 
 
+// Updates the target of the control, as well as the camera.
 export function updateFocusTarget() {
   if (targetPos === null || followTarget === null) {
     return;
   }
   controls.target.copy(targetPos); // Must not be updated or else the camera locks on instead. Not sure why.
-  //camera.fov = targetFov;
   camera.updateProjectionMatrix();
 }
 
 
+// Linear interpolation function for smoothly changing FOV
+function lerp(start, end, t) {
+  return start + (end - start) * t;
+}
+
+
+// Smoothly focuses on an object, by changing the FOV and control target
 export function smoothFocusOnObject(duration = 1000) {
   const worldPosition = new THREE.Vector3();
   followTarget.getWorldPosition(worldPosition);
@@ -115,6 +112,8 @@ export function smoothFocusOnObject(duration = 1000) {
   animate();
 }
 
+
+// Smoothly unfocuses by changing the FOV
 function smoothlyUnfocus(duration = 1000) {
   const startFov = camera.fov;
 

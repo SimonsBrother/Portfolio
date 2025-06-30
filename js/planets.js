@@ -78,21 +78,6 @@ export class Planet {
         // Add orbit line
         this.parent.add(this.makeOrbitLine());
 
-        /* UNUSED
-        // Create hitbox so that parts of the model aren't selectable
-        // Create bounding box of model
-        const hitboxMargin = 0.1; // How much bigger the hitbox should be than the model
-        const modelBox = new THREE.Box3().setFromObject(this.model);
-        const modelBoxSize = modelBox.getSize(new THREE.Vector3());
-        const modelCenter = modelBox.getCenter(new THREE.Vector3());
-        // Create box geometry from box size
-        const geometry = new THREE.BoxGeometry(modelBoxSize.x + hitboxMargin, modelBoxSize.y + hitboxMargin, modelBoxSize.z + hitboxMargin);
-        const hitbox = new THREE.Mesh(geometry);
-        hitbox.material.visible = false;
-        this.model.add(hitbox);
-        hitbox.position.set(...modelCenter); // Offset bounding box so it properly covers model
-        */
-
         // Update orbit and add to scene
         this.updatePlanet();
         scene.add(this.parent);
@@ -129,7 +114,7 @@ export class Planet {
   static orbitLineWidth = 0.02;
   makeOrbitLine() {
     const geometry = new THREE.RingGeometry( this.orbitDistance, this.orbitDistance + Planet.orbitLineWidth, 50 );
-    const material = new THREE.MeshBasicMaterial( { color: 0x555555, side: THREE.DoubleSide } );
+    const material = new THREE.MeshBasicMaterial( { color: 0x888888, side: THREE.DoubleSide } );
     const mesh = new THREE.Mesh( geometry, material );
     mesh.rotation.x = Math.PI / 2;
     return mesh;

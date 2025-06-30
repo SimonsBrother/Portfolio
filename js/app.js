@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls';
+import { ArcballControls } from 'three/addons/controls/ArcballControls';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass';
 import {UnrealBloomPass} from "three/addons/postprocessing/UnrealBloomPass";
@@ -14,6 +15,7 @@ import {
   updateFocusTarget,
   stopFollowing,
 } from "./focus";
+import {setupParticles} from "./blackhole";
 
 // Scene
 const scene = new THREE.Scene();
@@ -42,7 +44,7 @@ const bloomPass = new UnrealBloomPass(
   0.1,
   0
 );
-composer.addPass(bloomPass);
+//composer.addPass(bloomPass);
 
 export const outlinePass = new OutlinePass( new THREE.Vector2( window.innerWidth, window.innerHeight ), scene, camera );
 outlinePass.edgeStrength = 3;
@@ -51,9 +53,6 @@ outlinePass.edgeThickness = 2;
 outlinePass.visibleEdgeColor = new THREE.Color( 0xffffff );
 outlinePass.hiddenEdgeColor = new THREE.Color( 0xffffff );
 composer.addPass(outlinePass);
-
-const antialiasing = new SMAAPass();
-composer.addPass(antialiasing);
 
 // TEMP LIGHT
 const light = new THREE.DirectionalLight( 0xffffff, 1);
@@ -68,20 +67,6 @@ new Planet("models/test.glb", scene,
   new THREE.Euler(360, 0, 0),
   new THREE.Euler(0, 0, 0),
   new THREE.Vector3(0, 0, 0)
-);
-
-// TEMP CENTRE MODEL
-import {GLTFLoader} from 'three/addons/loaders/GLTFLoader';
-const loader = new GLTFLoader();
-loader.load("models/test.glb",
-  (gltf) => {
-    const model = gltf.scene;
-    scene.add(model);
-  },
-  undefined,
-  (error) => {
-    console.error(error);
-  }
 );
 
 
@@ -101,16 +86,60 @@ document.onmouseup = () => {
     setFollowTarget(intersects[0].object);
   }
 }
-
+// Handle unfocusing
 document.addEventListener("keydown", stopFollowing)
 
+// Handle window resizing
+window.addEventListener( 'resize', () => {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize( width, height );
+  composer.setSize( width, height );
+
+  bloomPass.resolution = new THREE.Vector2(width, height);
+  outlinePass.resolution = new THREE.Vector2(width, height);
+});
+
+const geometry = new THREE.SphereGeometry( 3, 32, 16 );
+const material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
+const sphere = new THREE.Mesh( geometry, material );
+sphere.position.y = 1;
+scene.add(sphere);
+const blackHoleOutline = new OutlinePass( new THREE.Vector2( window.innerWidth, window.innerHeight ), scene, camera );
+blackHoleOutline.edgeStrength = 1;
+blackHoleOutline.edgeGlow = 10;
+blackHoleOutline.edgeThickness = 1;
+blackHoleOutline.visibleEdgeColor = new THREE.Color( 0xffffff );
+//blackHoleOutline.hiddenEdgeColor = new THREE.Color( 0xffffff );
+blackHoleOutline.selectedObjects = [sphere];
+composer.addPass(blackHoleOutline);
+
+
+// Add antialiasing last
+const antialiasing = new SMAAPass();
+composer.addPass(antialiasing);
+
+const batchedRenderer = await setupParticles( scene );
 
 // Main loop
 function animate() {
+  // Update focus
   calculateTargetValues();
   updateFocusTarget();
+
+  // Update planets
   Planet.updateAllPlanets();
+
+  // Update black hole
+  let x = (Math.random() * (0.017 - 0.013)) + 0.013;
+  batchedRenderer.update(0.016);
+
   composer.render();
+
 }
 
 renderer.setAnimationLoop(animate);

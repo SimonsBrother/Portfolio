@@ -104,10 +104,11 @@ window.addEventListener( 'resize', () => {
   outlinePass.resolution = new THREE.Vector2(width, height);
 });
 
-const geometry = new THREE.SphereGeometry( 3, 32, 16 );
+// TODO move to blackhole.js
+const geometry = new THREE.SphereGeometry( 5, 32, 16 );
 const material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
 const sphere = new THREE.Mesh( geometry, material );
-sphere.position.y = 1;
+// sphere.position.y = 1;
 scene.add(sphere);
 const blackHoleOutline = new OutlinePass( new THREE.Vector2( window.innerWidth, window.innerHeight ), scene, camera );
 blackHoleOutline.edgeStrength = 1;

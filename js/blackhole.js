@@ -1,23 +1,27 @@
 import * as THREE from "three";
 import * as QUARKS from "three.quarks";
 import {
-  CircleEmitter,
   ColorRange,
   ConstantValue,
   DonutEmitter,
   EmitterMode,
   Gradient,
-  GridEmitter, IntervalValue,
+  GridEmitter, IntervalValue, MeshSurfaceEmitter, RandomQuatGenerator,
   RenderMode
 } from "three.quarks";
 import {Vector3, Vector4} from "three";
+import {OutlinePass} from "three/addons/postprocessing/OutlinePass";
+import {camera} from "./app";
+import {Text} from 'troika-three-text'
 
-const texture = await new THREE.TextureLoader().loadAsync("/img/img.png");
+const accretionTexture = await new THREE.TextureLoader().loadAsync("/img/img.png");
+
 const defaultSettings = {
   looping: true,
   duration: 4,
   emissionOverTime: new ConstantValue(10),
   emissionOverDistance: new ConstantValue(0),
+  prewarm: true,
 
   shape: new DonutEmitter({
     radius: 20,
@@ -41,7 +45,7 @@ const defaultSettings = {
 
   // Material for particles
   material: new THREE.MeshBasicMaterial({
-    map: texture,
+    map: accretionTexture,
     color: 0x09C405,
     transparent: true,
     opacity: 1,
@@ -74,7 +78,8 @@ function makeSystem(overwrittenSettings, length, batchedRenderer, scene, y=0) {
   return emitter;
 }
 
-export async function setupParticles(scene) {
+
+export async function setupAccretionDisk(scene) {
   const batchedRenderer = new QUARKS.BatchedRenderer();
 
   // Accretion disk
@@ -190,7 +195,7 @@ export async function setupParticles(scene) {
         radius: 17,
         arc: Math.PI * 0.015,
         thickness: 1,
-        donutRadius: 7,
+        donutRadius: 10,
         mode: EmitterMode.Random,
         spread: 0,
         speed: new ConstantValue(1),
@@ -272,19 +277,109 @@ export async function setupParticles(scene) {
   const bottomJet = makeSystem(jetConfig, 100, batchedRenderer, scene);
   bottomJet.rotation.set(1.5708, 0, 0);
 
-
+  setupTextDebris(scene, batchedRenderer, "0")
   scene.add(batchedRenderer);
   return batchedRenderer;
 }
 
-/*
-// Animation loop
-function animate() {
-  requestAnimationFrame(animate);
 
-  // Update the batched renderer
-  batchedRenderer.update(0.016); // Pass delta time in seconds
+export async function setupTextDebris(scene, batchedRenderer, text) {
+  const zeroMaterial = new THREE.MeshBasicMaterial({
+    map: await new THREE.TextureLoader().loadAsync("/img/zero.png"),
+    color: 0x09C405,
+    transparent: true,
+    opacity: 1,
+    side: THREE.FrontSide,
+    blending: THREE.AdditiveBlending,
+  });
+  const oneMaterial = new THREE.MeshBasicMaterial({
+    map: await new THREE.TextureLoader().loadAsync("/img/one.png"),
+    color: 0x09C405,
+    transparent: true,
+    opacity: 1,
+    side: THREE.FrontSide,
+    blending: THREE.AdditiveBlending,
+  });
 
-  renderer.render(scene, camera);
+  const baseConfig = {
+    shape: new DonutEmitter({
+      radius: 50,
+      arc: Math.PI * 0.005,
+      thickness: 1,
+      donutRadius: 10,
+      mode: EmitterMode.Random,
+      spread: 0,
+      speed: new ConstantValue(1),
+    }),
+
+    emissionOverTime: new ConstantValue(5),
+    renderMode: RenderMode.BillBoard,
+
+    startColor: new QUARKS.ConstantColor(new Vector4(0.3, 0.3, 0.3, 1)),
+    // startSize: new ConstantValue(1),
+
+    behaviors: [
+      new QUARKS.OrbitOverLife(new ConstantValue(5), new Vector3(0, 1, 0)),
+    ],
+  }
+
+  const configurations = [
+    {
+      shape: new DonutEmitter({
+        radius: 50,
+        arc: Math.PI * 0.005,
+        thickness: 1,
+        donutRadius: 10,
+        mode: EmitterMode.Random,
+        spread: 0,
+        speed: new ConstantValue(1),
+      }),
+      startColor: new QUARKS.ConstantColor(new Vector4(0.3, 0.3, 0.3, 1)),
+    },
+    {
+      shape: new DonutEmitter({
+        radius: 30,
+        arc: Math.PI * 0.005,
+        thickness: 1,
+        donutRadius: 10,
+        mode: EmitterMode.Random,
+        spread: 0,
+        speed: new ConstantValue(1),
+      }),
+      startColor: new QUARKS.ConstantColor(new Vector4(0.5, 0.7, 0.5, 1)),
+    },
+    {
+      shape: new DonutEmitter({
+        radius: 10,
+        arc: Math.PI * 0.005,
+        thickness: 1,
+        donutRadius: 10,
+        mode: EmitterMode.Random,
+        spread: 0,
+        speed: new ConstantValue(1),
+      }),
+      startColor: new QUARKS.ConstantColor(new Vector4(0.3, 1, 0.5, 1)),
+    }
+  ]
+
+  for (const configuration of configurations) {
+    makeSystem({...baseConfig, ...configuration, material: zeroMaterial}, 0, batchedRenderer, scene);
+    makeSystem({...baseConfig, ...configuration, material: oneMaterial}, 0, batchedRenderer, scene);
+  }
 }
-animate();*/
+
+
+export function addBlackHole(scene, composer) {
+  const geometry = new THREE.SphereGeometry( 5, 32, 16 );
+  const material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
+  const sphere = new THREE.Mesh( geometry, material );
+  scene.add(sphere);
+
+  const blackHoleOutline = new OutlinePass( new THREE.Vector2( window.innerWidth, window.innerHeight ), scene, camera );
+  blackHoleOutline.edgeStrength = 1;
+  blackHoleOutline.edgeGlow = 10;
+  blackHoleOutline.edgeThickness = 1;
+  blackHoleOutline.visibleEdgeColor = new THREE.Color( 0xffffff );
+  blackHoleOutline.selectedObjects = [sphere];
+  composer.addPass(blackHoleOutline);
+}

@@ -15,11 +15,21 @@ import {
   updateFocusTarget,
   stopFollowing,
 } from "./focus";
-import {setupParticles} from "./blackhole";
+import {addBlackHole, setupAccretionDisk} from "./blackhole";
+import {FontLoader, TextGeometry} from "three/addons";
 
 // Scene
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0, 0, 0)
+
+// Background
+const cubeTextureLoader = new THREE.CubeTextureLoader();
+cubeTextureLoader.setPath("img/cubemap_images/");
+const textureCube = await cubeTextureLoader.loadAsync( [
+  'px.png', 'nx.png',
+  'py.png', 'ny.png',
+  'pz.png', 'nz.png'
+] );
+scene.background = textureCube;
 
 // Renderer
 const renderer = new THREE.WebGLRenderer();
@@ -54,12 +64,12 @@ outlinePass.visibleEdgeColor = new THREE.Color( 0xffffff );
 outlinePass.hiddenEdgeColor = new THREE.Color( 0xffffff );
 composer.addPass(outlinePass);
 
-// TEMP LIGHT
+// TEMP LIGHT todo setup
 const light = new THREE.DirectionalLight( 0xffffff, 1);
 light.position.set( 3, -5, 3 );
 scene.add( light );
 
-// TEMP PLANET
+// TEMP PLANET todo remove
 new Planet("models/test.glb", scene,
   10,
   0,
@@ -68,6 +78,7 @@ new Planet("models/test.glb", scene,
   new THREE.Euler(0, 0, 0),
   new THREE.Vector3(0, 0, 0)
 );
+addBlackHole(scene, composer);
 
 
 // Pointer setup (for focussing on planets)
@@ -104,28 +115,12 @@ window.addEventListener( 'resize', () => {
   outlinePass.resolution = new THREE.Vector2(width, height);
 });
 
-// TODO move to blackhole.js
-const geometry = new THREE.SphereGeometry( 5, 32, 16 );
-const material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
-const sphere = new THREE.Mesh( geometry, material );
-// sphere.position.y = 1;
-scene.add(sphere);
-const blackHoleOutline = new OutlinePass( new THREE.Vector2( window.innerWidth, window.innerHeight ), scene, camera );
-blackHoleOutline.edgeStrength = 1;
-blackHoleOutline.edgeGlow = 10;
-blackHoleOutline.edgeThickness = 1;
-blackHoleOutline.visibleEdgeColor = new THREE.Color( 0xffffff );
-//blackHoleOutline.hiddenEdgeColor = new THREE.Color( 0xffffff );
-blackHoleOutline.selectedObjects = [sphere];
-composer.addPass(blackHoleOutline);
-
+// For particles
+const batchedRenderer = await setupAccretionDisk( scene );
 
 // Add antialiasing last
 const antialiasing = new SMAAPass();
 composer.addPass(antialiasing);
-
-const batchedRenderer = await setupParticles( scene );
-
 // Main loop
 function animate() {
   // Update focus
@@ -136,7 +131,6 @@ function animate() {
   Planet.updateAllPlanets();
 
   // Update black hole
-  let x = (Math.random() * (0.017 - 0.013)) + 0.013;
   batchedRenderer.update(0.016);
 
   composer.render();

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { outlinePass } from "./app";
+import {dimParticles, undimParticles} from "./blackhole";
 
 // For ease of access, rather than having params for them in every function
 let camera = null;
@@ -35,6 +36,7 @@ export function setFollowTarget(object) {
 
   outlinePass.selectedObjects = [object.parent];
   smoothFocusOnObject();
+  dimParticles();
 }
 
 
@@ -45,6 +47,7 @@ export function stopFollowing() {
 
   outlinePass.selectedObjects = [];
   smoothlyUnfocus();
+  undimParticles();
 }
 
 

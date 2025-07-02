@@ -16,12 +16,12 @@ import {
   stopFollowing,
 } from "./focus";
 import {addBlackHole, setupAccretionDisk} from "./blackhole";
-import {FontLoader, TextGeometry} from "three/addons";
 
 // Scene
 const scene = new THREE.Scene();
 
-// Background
+// TODO credit https://esahubble.org/copyright/ very clearly!
+// Background (made with https://jaxry.github.io/panorama-to-cubemap/ and https://www.deviantart.com/kirriaa/art/Free-star-sky-HDRI-spherical-map-719281328)
 const cubeTextureLoader = new THREE.CubeTextureLoader();
 cubeTextureLoader.setPath("img/cubemap_images/");
 const textureCube = await cubeTextureLoader.loadAsync( [
@@ -50,11 +50,11 @@ composer.addPass(new RenderPass(scene, camera));
 // Bloom
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-    .7,
+    .1,
   0.1,
-  0
+  0.5
 );
-//composer.addPass(bloomPass);
+composer.addPass(bloomPass);
 
 export const outlinePass = new OutlinePass( new THREE.Vector2( window.innerWidth, window.innerHeight ), scene, camera );
 outlinePass.edgeStrength = 3;
@@ -64,19 +64,19 @@ outlinePass.visibleEdgeColor = new THREE.Color( 0xffffff );
 outlinePass.hiddenEdgeColor = new THREE.Color( 0xffffff );
 composer.addPass(outlinePass);
 
-// TEMP LIGHT todo setup
-const light = new THREE.DirectionalLight( 0xffffff, 1);
-light.position.set( 3, -5, 3 );
+// Lighting
+const light = new THREE.PointLight( 0xffffff, 4, 0, 0);
+light.position.set( 0, 0, 0 );
 scene.add( light );
 
 // TEMP PLANET todo remove
 new Planet("models/test.glb", scene,
-  10,
+  50,
   0,
   10,
   new THREE.Euler(360, 0, 0),
   new THREE.Euler(0, 0, 0),
-  new THREE.Vector3(0, 0, 0)
+  new THREE.Vector3(0, 5, 0)
 );
 addBlackHole(scene, composer);
 

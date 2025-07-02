@@ -6,15 +6,15 @@ import {
   DonutEmitter,
   EmitterMode,
   Gradient,
-  GridEmitter, IntervalValue, MeshSurfaceEmitter, RandomQuatGenerator,
+  GridEmitter, IntervalValue,
   RenderMode
 } from "three.quarks";
 import {Vector3, Vector4} from "three";
 import {OutlinePass} from "three/addons/postprocessing/OutlinePass";
 import {camera} from "./app";
-import {Text} from 'troika-three-text'
 
 const accretionTexture = await new THREE.TextureLoader().loadAsync("/img/img.png");
+const particleSystems = []
 
 const defaultSettings = {
   looping: true,
@@ -37,7 +37,6 @@ const defaultSettings = {
   startLife: new ConstantValue(5),
   startSize: new ConstantValue(2),
   startSpeed: new ConstantValue(0),
-
 
   renderMode: RenderMode.Trail,
   //startLength: new ConstantValue(70),
@@ -67,6 +66,7 @@ function makeSystem(overwrittenSettings, length, batchedRenderer, scene, y=0) {
     ...overwrittenSettings,
   });
   particleSystem.rendererEmitterSettings.startLength = new ConstantValue(50);
+  particleSystems.push(particleSystem);
 
   // Add the particle system to the batched renderer
   batchedRenderer.addSystem(particleSystem);
@@ -277,13 +277,13 @@ export async function setupAccretionDisk(scene) {
   const bottomJet = makeSystem(jetConfig, 100, batchedRenderer, scene);
   bottomJet.rotation.set(1.5708, 0, 0);
 
-  setupTextDebris(scene, batchedRenderer, "0")
+  await setupTextDebris(scene, batchedRenderer)
   scene.add(batchedRenderer);
   return batchedRenderer;
 }
 
 
-export async function setupTextDebris(scene, batchedRenderer, text) {
+export async function setupTextDebris(scene, batchedRenderer) {
   const zeroMaterial = new THREE.MeshBasicMaterial({
     map: await new THREE.TextureLoader().loadAsync("/img/zero.png"),
     color: 0x09C405,
@@ -382,4 +382,17 @@ export function addBlackHole(scene, composer) {
   blackHoleOutline.visibleEdgeColor = new THREE.Color( 0xffffff );
   blackHoleOutline.selectedObjects = [sphere];
   composer.addPass(blackHoleOutline);
+}
+
+
+export function dimParticles() {
+  for (const system of particleSystems) {
+    system.startColor.color.w = 0.1;
+  }
+}
+
+export function undimParticles() {
+  for (const system of particleSystems) {
+    system.startColor.color.w = 1;
+  }
 }

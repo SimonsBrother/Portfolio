@@ -12,10 +12,12 @@ import {
   setupFocus,
   calculateTargetValues,
   setFollowTarget,
+  isTargetInvalid,
   updateFocusTarget,
   stopFollowing,
 } from "./focus";
 import {addBlackHole, setupAccretionDisk} from "./blackhole";
+import {FocusCircle} from "./projectinfo";
 
 // Scene
 const scene = new THREE.Scene();
@@ -92,13 +94,23 @@ window.onpointermove = ( event ) => {
   raycaster.setFromCamera( pointer, camera );
   intersects = raycaster.intersectObjects( scene.children );
 }
+
+const focusCircle = new FocusCircle(scene, camera);
+// Focussing
 document.onmouseup = () => {
   if (intersects.length > 0) {
-    setFollowTarget(intersects[0].object);
+    const obj = intersects[0].object
+    if (isTargetInvalid(obj)) return;
+    setFollowTarget(obj);
+    focusCircle.makeRing();
   }
 }
 // Handle unfocusing
-document.addEventListener("keydown", stopFollowing)
+document.addEventListener("keydown", (key) => {
+  if (key.code !== "Escape") return;
+  stopFollowing()
+  focusCircle.destroyRing();
+})
 
 // Handle window resizing
 window.addEventListener( 'resize', () => {
@@ -126,6 +138,7 @@ function animate() {
   // Update focus
   calculateTargetValues();
   updateFocusTarget();
+  focusCircle.update();
 
   // Update planets
   Planet.updateAllPlanets();

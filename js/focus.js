@@ -10,33 +10,36 @@ export function setupFocus(camera_, controls_) {
   controls = controls_;
 }
 
-
 // The object that the camera will attempt to follow.
-let followTarget = null; // TODO make it so only planets can be followed
+export let followTarget = null; // TODO make it so only planets can be followed
 
 let targetPos = null; // The global position of the target object
 let targetFov = -1; // The target FOV of the camera
-let targetMaxSize = 0; // The largest size the bounding box of the target has been; important for rotating objects
+export let targetMaxSize = 0; // The largest size the bounding box of the target has been; important for rotating objects
 
 const fovMargin = 3; // The margin of the field of view during focussing
 const unfocussedFov = 75;
 
 
+export function isTargetInvalid(object) {
+  /**
+   * Returns true if the object selected should be focussed on
+   */
+  return (!object.parent || // If there is no parent, or
+    (!object.parent.userData.isSelectable || // (a parent therefore exists) the parent is not selectable, or
+      (followTarget && object.parent.uuid === followTarget.uuid))) // if there is currently a followed target and that target is the same as the new target
+  // Then the target is invalid
+}
+
 export function setFollowTarget(object) {
-  if (!object.parent || // If there is no parent, or
-      (!object.parent.userData.isSelectable || // (a parent therefore exists) the parent is not selectable, or
-        (followTarget && object.parent.uuid === followTarget.uuid))) // if there is currently a followed target and that target is the same as the new target
-  {
-    return;
-  }
+  dimParticles();
   followTarget = object.parent;
   controls.enablePan = false;
   controls.enableZoom = false;
-  targetMaxSize = 0;
+  targetMaxSize = -1;
 
   outlinePass.selectedObjects = [object.parent];
   smoothFocusOnObject();
-  dimParticles();
 }
 
 

@@ -40,6 +40,7 @@ export function setFollowTarget(object) {
 
   outlinePass.selectedObjects = [object.parent];
   smoothFocusOnObject();
+  showRing();
 }
 
 
@@ -51,6 +52,7 @@ export function stopFollowing() {
   outlinePass.selectedObjects = [];
   smoothlyUnfocus();
   undimParticles();
+  hideRing();
 }
 
 
@@ -160,4 +162,16 @@ function smoothlyUnfocus(duration = 1000) {
   }
 
   animate();
+}
+
+
+const htmlFocusRing = document.getElementById("focus-circle"); // todo wait until load
+function showRing() {
+  htmlFocusRing.style.animationName = "fade-in"
+  htmlFocusRing.style.opacity = "1";
+}
+
+function hideRing() {
+  htmlFocusRing.style.animationName = "fade-out"
+  htmlFocusRing.style.opacity = "0";
 }

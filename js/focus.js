@@ -16,8 +16,9 @@ export let followTarget = null; // TODO make it so only planets can be followed
 let targetPos = null; // The global position of the target object
 let targetFov = -1; // The target FOV of the camera
 export let targetMaxSize = 0; // The largest size the bounding box of the target has been; important for rotating objects
+let targetMaxProjectedSize = 0; // The largest projected size that the bounding box has been, for the focus circle
 
-const fovMargin = 3; // The margin of the field of view during focussing
+const fovMargin = 5; // The margin of the field of view during focussing
 const unfocussedFov = 75;
 
 
@@ -40,7 +41,6 @@ export function setFollowTarget(object) {
 
   outlinePass.selectedObjects = [object.parent];
   smoothFocusOnObject();
-  showRing();
 }
 
 
@@ -66,22 +66,15 @@ export function calculateTargetValues() {
     targetPos = new THREE.Vector3();
   }
   followTarget.getWorldPosition(targetPos);
-
-  // Get bounding box, which gets centre and size of object (zoom out more if object is bigger)
-  const box = new THREE.Box3().setFromObject(followTarget);
-  const size = box.getSize(new THREE.Vector3());
-
-  // Calculate appropriate distance (zoom out more if object is bigger)
-  const maxDimension = Math.max(size.x, size.y, size.z);
-  // Keep track of the max size; this is because the size of the box changes shape with rotation, causing the fov to change rapidly.
-  if (maxDimension > targetMaxSize) targetMaxSize = maxDimension;
+  targetMaxSize = followTarget.userData.planetSize;
   const distance = camera.position.distanceTo(targetPos);
-
-  targetFov = 2 * Math.atan((targetMaxSize * fovMargin) / (2 * distance)) * (180 / Math.PI); // Formula by Claude
+  targetFov = 2 * Math.atan((targetMaxSize * 3) / (distance)) * (180 / Math.PI);
 
   // This updates the changes to the camera made in updateFocusTarget; this must be done here else it will jump instead of lerp
   controls.update();
   camera.updateProjectionMatrix();
+
+  showRing();
 }
 
 
@@ -167,11 +160,12 @@ function smoothlyUnfocus(duration = 1000) {
 
 const htmlFocusRing = document.getElementById("focus-circle"); // todo wait until load
 function showRing() {
+  // htmlFocusRing.style.width = htmlFocusRing.style.height = `${10*Math.pow(targetMaxSize, 0.2)}vw`;
   htmlFocusRing.style.animationName = "fade-in"
-  htmlFocusRing.style.opacity = "1";
+  htmlFocusRing.style.animationDelay = "0.6s";
 }
 
 function hideRing() {
   htmlFocusRing.style.animationName = "fade-out"
-  htmlFocusRing.style.opacity = "0";
+  htmlFocusRing.style.animationDelay = "0s";
 }

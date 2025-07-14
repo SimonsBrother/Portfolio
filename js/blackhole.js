@@ -370,7 +370,7 @@ export async function setupTextDebris(scene, batchedRenderer) {
 
 
 export function addBlackHole(scene, composer) {
-  const geometry = new THREE.SphereGeometry( 5, 32, 16 );
+  const geometry = new THREE.SphereGeometry( 6, 32, 16 );
   const material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
   const sphere = new THREE.Mesh( geometry, material );
   scene.add(sphere);
@@ -380,6 +380,7 @@ export function addBlackHole(scene, composer) {
   blackHoleOutline.edgeGlow = 3;
   blackHoleOutline.edgeThickness = 5;
   blackHoleOutline.visibleEdgeColor = new THREE.Color( 0xeeff11 );
+  blackHoleOutline.hiddenEdgeColor = new THREE.Color( 0x000000 ); // Hide when eclipsed
   blackHoleOutline.selectedObjects = [sphere];
   composer.addPass(blackHoleOutline);
 }

@@ -1,5 +1,6 @@
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader';
 import * as THREE from "three";
+import {followTarget} from "./focus";
 
 const loader = new GLTFLoader();
 
@@ -46,17 +47,19 @@ export class Planet {
    * @param orbitRadius the radius of the orbit.
    * @param orbitInitialAngle the starting angle of the orbit in degrees.
    * @param orbitSpeed the speed of the orbit in degrees per second.
+   * @param planetSize the diameter of the planet.
    * @param planetRotationSpeed the speed that the planet rotates, as an Euler in degrees.
    * @param orbitOrientation the orientation of the orbit, as an Euler in degrees.
    * @param orbitCentre the point that the orbit moves around, as a Vector3.
    */
-  constructor(modelPath, scene, orbitRadius, orbitInitialAngle, orbitSpeed,
+  constructor(modelPath, scene, orbitRadius, orbitInitialAngle, orbitSpeed, planetSize,
               planetRotationSpeed = new THREE.Euler(0, 0.1, 0),
               orbitOrientation = new THREE.Euler(0, 0, 0),
               orbitCentre = new THREE.Vector3(0, 0, 0)) {
     this.orbitDistance = orbitRadius;
     this.initialAngle = orbitInitialAngle;
     this.orbitSpeed = orbitSpeed;
+    this.planetSize = planetSize;
     this.planetRotationSpeed = radiansEuler(planetRotationSpeed);
     this.orbitOrientation = radiansEuler(orbitOrientation);
     this.centre = orbitCentre;
@@ -64,12 +67,13 @@ export class Planet {
     this.model = null;
 
     // Load model
-    loader.load("models/test.glb",
+    loader.load(modelPath,
       (gltf) => {
         this.model = gltf.scene;
         this.model.userData.isSelectable = true;
+        this.model.userData.planetSize = this.planetSize;
 
-        // Placeholder parent to store, position, and orient both the planet and its orbit
+        // Placeholder parent to store, position, and orient both the planet and its orbit. This is at the centre of the orbit.
         this.parent = new THREE.Object3D();
         this.parent.position.set(...this.centre);
         this.parent.rotation.set(...this.orbitOrientation);

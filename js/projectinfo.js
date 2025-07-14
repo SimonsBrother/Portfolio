@@ -9,7 +9,7 @@ export class FocusCircle {
   }
 
   makeRing(ringWidth = 0.1) {
-    return // currently disabled
+    return
     this.destroyRing();
     const focusSize = 2.5 * targetMaxSize
     const geometry = new THREE.RingGeometry(focusSize, focusSize + ringWidth, 50 );

@@ -1,10 +1,10 @@
 @keyframes fade-in {
-  from { opacity: 0; }
+  from { opacity: 0; visibility: visible; }
   to { opacity: 1; }
 }
 @keyframes fade-out {
   from { opacity: 1; }
-  to { opacity: 0; }
+  to { opacity: 0; visibility: hidden; }
 }
 
 #focus-circle {
@@ -20,8 +20,9 @@
   z-index: 10;
   opacity: 0;
 
-  width: 100px;
-  height: 100px;
+  width: 22vw;
+  height: 22vw;
 
   animation-duration: 0.5s;
+  animation-fill-mode: forwards;
 }

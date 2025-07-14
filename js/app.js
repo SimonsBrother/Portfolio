@@ -1,20 +1,14 @@
 import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass';
-import {UnrealBloomPass} from "three/addons/postprocessing/UnrealBloomPass";
-import { SMAAPass } from 'three/addons/postprocessing/SMAAPass';
-import {OutlinePass} from 'three/addons/postprocessing/OutlinePass';
 
 import { Planet } from "./planets";
 import {
-  setupFocus,
-  calculateTargetValues,
-  setFollowTarget,
-  isTargetInvalid,
-  stopFollowing,
+  setupFocusing,
+  updateFocus,
 } from "./focus";
 import {addBlackHole, setupAccretionDisk} from "./blackhole";
+import {loadPlanets} from "./loadPlanets";
+import {addPostProcessing} from "./postProcessing";
 
 // Scene
 const scene = new THREE.Scene();
@@ -36,88 +30,6 @@ renderer.toneMapping = THREE.ReinhardToneMapping;
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
-// Camera
-export const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 0, 15)
-const arcballControls = new OrbitControls(camera, renderer.domElement)//new ArcballControls(camera, renderer.domElement);
-arcballControls.update();
-setupFocus(camera, arcballControls);
-
-// Post-processing
-export let composer = new EffectComposer(renderer);
-composer.addPass(new RenderPass(scene, camera));
-// Bloom
-const bloomPass = new UnrealBloomPass(
-  new THREE.Vector2(window.innerWidth, window.innerHeight),
-    .1,
-  0.1,
-  0.5
-);
-composer.addPass(bloomPass);
-
-export const outlinePass = new OutlinePass( new THREE.Vector2( window.innerWidth, window.innerHeight ), scene, camera );
-outlinePass.edgeStrength = 3;
-outlinePass.edgeGlow = 1;
-outlinePass.edgeThickness = 2;
-outlinePass.visibleEdgeColor = new THREE.Color( 0xffffff );
-outlinePass.hiddenEdgeColor = new THREE.Color( 0xffffff );
-composer.addPass(outlinePass);
-
-// Lighting
-const light = new THREE.PointLight( 0xffffff, 4, 0, 0);
-light.position.set( 0, 0, 0 );
-scene.add( light );
-
-// TEMP PLANET todo remove
-new Planet("models/test.glb", scene,
-  50,
-  0,
-  5,
-  1.6,
-  new THREE.Euler(50, 0, 0),
-  new THREE.Euler(0, 0, 0),
-  new THREE.Vector3(0, 5, 0)
-);
-new Planet("models/monkey.glb", scene,
-  100,
-  180,
-  4,
-  10,
-  new THREE.Euler(20, 50, 10),
-  new THREE.Euler(0, 0, 0),
-  new THREE.Vector3(0, 5, 0)
-);
-
-
-addBlackHole(scene, composer);
-
-
-// Pointer setup (for focussing on planets) todo move
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-let intersects = [];
-window.onpointermove = ( event ) => {
-  pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-  pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-
-  raycaster.setFromCamera( pointer, camera );
-  intersects = raycaster.intersectObjects( scene.children );
-}
-
-// Focussing
-document.onmouseup = () => {
-  if (intersects.length > 0) {
-    const obj = intersects[0].object
-    if (isTargetInvalid(obj)) return;
-    setFollowTarget(obj);
-  }
-}
-// Handle unfocusing
-document.addEventListener("keydown", (key) => {
-  if (key.code !== "Escape") return;
-  stopFollowing()
-})
-
 // Handle window resizing
 window.addEventListener( 'resize', () => {
   const width = window.innerWidth;
@@ -127,37 +39,47 @@ window.addEventListener( 'resize', () => {
   camera.updateProjectionMatrix();
 
   renderer.setSize( width, height );
-  composer.setSize( width, height );
-
-  bloomPass.resolution = new THREE.Vector2(width, height);
-  outlinePass.resolution = new THREE.Vector2(width, height);
 });
 
-// For particles
-const batchedRenderer = await setupAccretionDisk( scene );
+// Camera and controls
+export const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 0, 15)
+const controls = new OrbitControls(camera, renderer.domElement)//new ArcballControls(camera, renderer.domElement);
+controls.update();
 
-// Add antialiasing last
-const antialiasing = new SMAAPass();
-composer.addPass(antialiasing);
+// Lighting
+const light = new THREE.PointLight( 0xffffff, 4, 0, 0);
+light.position.set( 0, 0, 0 );
+scene.add( light );
+
+// Pointer setup (for detecting clicked objects etc)
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+export let intersects = [];
+window.onpointermove = ( event ) => {
+  pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+  pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+  raycaster.setFromCamera( pointer, camera );
+  intersects = raycaster.intersectObjects( scene.children );
+}
+
+// Do post-processing last
+export const composer = addPostProcessing(scene, camera, renderer);
+
+// Other setup
+setupFocusing(camera, controls);
+addBlackHole(scene, composer);
+const batchedRenderer = await setupAccretionDisk( scene ); // For particles
+loadPlanets(scene);
+
+
 // Main loop
 function animate() {
-  // Update focus
-  calculateTargetValues();
-
-  // Update planets
   Planet.updateAllPlanets();
-
-  // Update black hole
-  batchedRenderer.update(0.016);
-
-  composer.render();
-
+  updateFocus();
+  batchedRenderer.update(0.016); // Update black hole particles
+  composer.render(); // Render with post processing
 }
 
 renderer.setAnimationLoop(animate);
-
-
-
-/*window.onresize = function (event) {
-  let visible_height = 2 * Math.tan( ( Math.PI / 180 ) * camera.fov / 2 ) * distance_from_camera;
-}*/

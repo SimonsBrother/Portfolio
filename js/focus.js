@@ -1,24 +1,41 @@
 import * as THREE from "three";
-import { outlinePass } from "./app";
+import {intersects} from "./app";
+import {outlinePass} from "./postProcessing";
 import {dimParticles, undimParticles} from "./blackhole";
 
-// For ease of access, rather than having params for them in every function
-let camera = null;
-let controls = null;
-let unfocussedFov = -1;
+// Assign listeners
+// Focussing
+document.onmousedown = () => {
+  // If an object was clicked
+  if (intersects.length > 0) {
+    const obj = intersects[0].object
+
+    // If its a valid object, set the follow target
+    if (isTargetInvalid(obj)) return;
+    setFollowTarget(obj);
+  }
+}
+// Unfocusing
+document.addEventListener("keydown", (key) => {
+  if (key.code !== "Escape") return;
+  stopFollowing()
+})
 
 /**
  * Sets up focussing for the camera.
  * @param camera_ the camera in the scene that will be focussing on objects.
  * @param controls_ the controls (ideally orbit control, arcball may work)
  */
-export function setupFocus(camera_, controls_) {
+export function setupFocusing(camera_, controls_) {
   camera = camera_;
   controls = controls_;
   unfocussedFov = camera.fov;
 }
+// For ease of access, rather than having params for them in every function
+let camera = null;
+let controls = null;
+let unfocussedFov = -1;
 
-// Global
 let followTarget = null; // The object that the camera will attempt to follow.
 let targetPos = null; // The global position of the target object
 let targetFov = -1; // The target FOV of the camera; the camera may not yet be at that FOV
@@ -70,7 +87,7 @@ export function stopFollowing() {
  * @param fovMarginFactor the percentage of extra space that should be put around the followed object, based on its size.
  * A fovMarginFactor 1.1 would mean there would be empty space at the sides of the object of 10% the object's size.
  */
-export function calculateTargetValues(fovMarginFactor = 1.5) {
+export function updateFocus(fovMarginFactor = 1.5) {
   if (followTarget === null) return; // Nothing being followed, return
 
   if (targetPos === null) targetPos = new THREE.Vector3();

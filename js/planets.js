@@ -15,7 +15,6 @@ function getElapsedTime() {
 function radians(degrees) {
   return (degrees * Math.PI) / 180.0;
 }
-export const r = radians; // Shortcut
 
 // Degrees to radians for Euler angles
 function radiansEuler(euler) {
@@ -55,6 +54,12 @@ export class Planet {
               planetRotationSpeed = new THREE.Euler(0, 0.1, 0),
               orbitOrientation = new THREE.Euler(0, 0, 0),
               orbitCentre = new THREE.Vector3(0, 0, 0)) {
+    // Validate
+    if (!scene || orbitRadius <= 0 || planetSize <= 0 ||
+      !planetRotationSpeed.isEuler || !orbitOrientation.isEuler || !orbitCentre.isVector3) {
+      throw "Invalid arguments for planet.";
+    }
+
     this.orbitDistance = orbitRadius;
     this.initialAngle = orbitInitialAngle;
     this.orbitSpeed = orbitSpeed;

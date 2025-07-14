@@ -1,6 +1,5 @@
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader';
 import * as THREE from "three";
-import {followTarget} from "./focus";
 
 const loader = new GLTFLoader();
 

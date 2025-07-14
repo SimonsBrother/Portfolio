@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { OrbitControls } from 'three/addons/controls/OrbitControls';
-import { ArcballControls } from 'three/addons/controls/ArcballControls';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass';
 import {UnrealBloomPass} from "three/addons/postprocessing/UnrealBloomPass";
@@ -13,11 +12,9 @@ import {
   calculateTargetValues,
   setFollowTarget,
   isTargetInvalid,
-  updateFocusTarget,
   stopFollowing,
 } from "./focus";
 import {addBlackHole, setupAccretionDisk} from "./blackhole";
-import {FocusCircle} from "./projectinfo";
 
 // Scene
 const scene = new THREE.Scene();
@@ -75,9 +72,9 @@ scene.add( light );
 new Planet("models/test.glb", scene,
   50,
   0,
-  10,
+  5,
   1.6,
-  new THREE.Euler(360, 0, 0),
+  new THREE.Euler(50, 0, 0),
   new THREE.Euler(0, 0, 0),
   new THREE.Vector3(0, 5, 0)
 );
@@ -95,7 +92,7 @@ new Planet("models/monkey.glb", scene,
 addBlackHole(scene, composer);
 
 
-// Pointer setup (for focussing on planets)
+// Pointer setup (for focussing on planets) todo move
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 let intersects = [];
@@ -107,21 +104,18 @@ window.onpointermove = ( event ) => {
   intersects = raycaster.intersectObjects( scene.children );
 }
 
-const focusCircle = new FocusCircle(scene, camera);
 // Focussing
 document.onmouseup = () => {
   if (intersects.length > 0) {
     const obj = intersects[0].object
     if (isTargetInvalid(obj)) return;
     setFollowTarget(obj);
-    focusCircle.makeRing();
   }
 }
 // Handle unfocusing
 document.addEventListener("keydown", (key) => {
   if (key.code !== "Escape") return;
   stopFollowing()
-  focusCircle.destroyRing();
 })
 
 // Handle window resizing
@@ -149,8 +143,6 @@ composer.addPass(antialiasing);
 function animate() {
   // Update focus
   calculateTargetValues();
-  updateFocusTarget();
-  focusCircle.update();
 
   // Update planets
   Planet.updateAllPlanets();

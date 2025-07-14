@@ -5,45 +5,54 @@ import {dimParticles, undimParticles} from "./blackhole";
 // For ease of access, rather than having params for them in every function
 let camera = null;
 let controls = null;
+let unfocussedFov = -1;
+
+/**
+ * Sets up focussing for the camera.
+ * @param camera_ the camera in the scene that will be focussing on objects.
+ * @param controls_ the controls (ideally orbit control, arcball may work)
+ */
 export function setupFocus(camera_, controls_) {
   camera = camera_;
   controls = controls_;
+  unfocussedFov = camera.fov;
 }
 
-// The object that the camera will attempt to follow.
-export let followTarget = null; // TODO make it so only planets can be followed
-
+// Global
+let followTarget = null; // The object that the camera will attempt to follow.
 let targetPos = null; // The global position of the target object
-let targetFov = -1; // The target FOV of the camera
-export let targetMaxSize = 0; // The largest size the bounding box of the target has been; important for rotating objects
-let targetMaxProjectedSize = 0; // The largest projected size that the bounding box has been, for the focus circle
-
-const fovMargin = 5; // The margin of the field of view during focussing
-const unfocussedFov = 75;
+let targetFov = -1; // The target FOV of the camera; the camera may not yet be at that FOV
 
 
+/**
+ * Returns true if the object selected is invalid, and so should NOT be focussed on
+ * @param object the object to check.
+ * @returns {boolean} true if the object passed is invalid.
+ */
 export function isTargetInvalid(object) {
-  /**
-   * Returns true if the object selected should be focussed on
-   */
   return (!object.parent || // If there is no parent, or
     (!object.parent.userData.isSelectable || // (a parent therefore exists) the parent is not selectable, or
       (followTarget && object.parent.uuid === followTarget.uuid))) // if there is currently a followed target and that target is the same as the new target
   // Then the target is invalid
 }
 
+/**
+ * Dims quasar, configures controls, and smoothly focuses on the object.
+ * @param object the object to focus on.
+ */
 export function setFollowTarget(object) {
   dimParticles();
   followTarget = object.parent;
   controls.enablePan = false;
   controls.enableZoom = false;
-  targetMaxSize = -1;
 
   outlinePass.selectedObjects = [object.parent];
   smoothFocusOnObject();
 }
 
-
+/**
+ * Unfocuses and stops following the object that was currently being followed.
+ */
 export function stopFollowing() {
   followTarget = null;
   controls.enablePan = true;
@@ -52,78 +61,64 @@ export function stopFollowing() {
   outlinePass.selectedObjects = [];
   smoothlyUnfocus();
   undimParticles();
-  hideRing();
 }
 
 
-// Calculates the intended control target position and FOV
-export function calculateTargetValues() {
-  if (followTarget === null) {
-    return;
-  }
-  // Update target's position
-  if (targetPos === null) {
-    targetPos = new THREE.Vector3();
-  }
-  followTarget.getWorldPosition(targetPos);
-  targetMaxSize = followTarget.userData.planetSize;
-  const distance = camera.position.distanceTo(targetPos);
-  targetFov = 2 * Math.atan((targetMaxSize * 3) / (distance)) * (180 / Math.PI);
+/**
+ * Updates the position that the control should point to (its target) and the FOV the camera should point to, and applies the changes.
+ * This should be part of the animation loop.
+ * @param fovMarginFactor the percentage of extra space that should be put around the followed object, based on its size.
+ * A fovMarginFactor 1.1 would mean there would be empty space at the sides of the object of 10% the object's size.
+ */
+export function calculateTargetValues(fovMarginFactor = 1.5) {
+  if (followTarget === null) return; // Nothing being followed, return
 
-  // This updates the changes to the camera made in updateFocusTarget; this must be done here else it will jump instead of lerp
+  if (targetPos === null) targetPos = new THREE.Vector3();
+  followTarget.getWorldPosition(targetPos);
+
+  // Use trigonometry to work out the FOV needed; increasing fovMarginFactor increases the margin,
+  const distance = camera.position.distanceTo(targetPos);
+  // which is multiplied by the target size to avoid achieve a similar size for all planets
+  targetFov = Math.atan((followTarget.userData.planetSize * fovMarginFactor) / (distance))
+    * (180 / Math.PI) // Convert to degrees
+    * 2 // Trigonometry only gets half of the FOV via a right angled triangle
+
+  // Update controls and camera, then update the values to be used, in that order - I don't know why, but it doesn't smoothly focus otherwise.
   controls.update();
   camera.updateProjectionMatrix();
 
-  showRing();
-}
-
-
-// Updates the target of the control, as well as the camera.
-export function updateFocusTarget() {
-  if (targetPos === null || followTarget === null) {
-    return;
-  }
+  // Update target values
   controls.target.copy(targetPos); // Must not be updated or else the camera snaps
   camera.fov = targetFov;
 }
 
-
-// Linear interpolation function for smoothly changing FOV
-function lerp(start, end, t) {
-  return start + (end - start) * t;
-}
-
-
-// Smoothly focuses on an object, by changing the FOV and control target
+/**
+ * Smoothly focuses on an object, by changing the FOV and control target
+ * @param duration how long to take in milliseconds.
+ */
 export function smoothFocusOnObject(duration = 1000) {
-  const worldPosition = new THREE.Vector3();
-  followTarget.getWorldPosition(worldPosition);
+  if (followTarget === null) return;
+  // The real world position is the target end position
+  const worldPosition = followTarget.getWorldPosition(new THREE.Vector3());
 
   const startTarget = controls.target.clone();
-  let endTarget = worldPosition.clone();
   const startFov = camera.fov;
-
   const startTime = performance.now();
 
   function animate() {
-    if (followTarget === null) {
-      return;
-    }
-    const worldPosition = new THREE.Vector3();
+    // Get expected progress and updated position of the follow target
     followTarget.getWorldPosition(worldPosition);
-    endTarget = worldPosition;
     const elapsed = performance.now() - startTime;
     const progress = Math.min(elapsed / duration, 1);
+    const easeProgress = 1 - Math.pow(1 - progress, 3); // Ease in
 
-    // Smooth easing function
-    const easeProgress = 1 - Math.pow(1 - progress, 3);
-
-    controls.target.lerpVectors(startTarget, endTarget, easeProgress);
+    // Updates camera and controls
+    controls.target.lerpVectors(startTarget, worldPosition, easeProgress);
     camera.fov = lerp(startFov, targetFov, easeProgress);
     camera.updateProjectionMatrix();
-
     controls.update();
 
+    // Loop via recursion, updating the frame
     if (progress < 1) {
       requestAnimationFrame(animate);
     }
@@ -132,20 +127,20 @@ export function smoothFocusOnObject(duration = 1000) {
   animate();
 }
 
-
-// Smoothly unfocuses by changing the FOV
+/**
+ * Smoothly unfocuses by changing the FOV
+ * @param duration how long to take in milliseconds.
+ */
 function smoothlyUnfocus(duration = 1000) {
   const startFov = camera.fov;
-
   const startTime = performance.now();
 
   function animate() {
     const elapsed = performance.now() - startTime;
     const progress = Math.min(elapsed / duration, 1);
+    const easeProgress = 1 - Math.pow(1 - progress, 3); // Ease out
 
-    // Smooth easing function
-    const easeProgress = 1 - Math.pow(1 - progress, 3);
-
+    // Update camera
     camera.fov = lerp(startFov, unfocussedFov, easeProgress);
     camera.updateProjectionMatrix();
 
@@ -157,15 +152,7 @@ function smoothlyUnfocus(duration = 1000) {
   animate();
 }
 
-
-const htmlFocusRing = document.getElementById("focus-circle"); // todo wait until load
-function showRing() {
-  // htmlFocusRing.style.width = htmlFocusRing.style.height = `${10*Math.pow(targetMaxSize, 0.2)}vw`;
-  htmlFocusRing.style.animationName = "fade-in"
-  htmlFocusRing.style.animationDelay = "0.6s";
-}
-
-function hideRing() {
-  htmlFocusRing.style.animationName = "fade-out"
-  htmlFocusRing.style.animationDelay = "0s";
+// Linear interpolation function for smoothly changing FOV
+function lerp(start, end, t) {
+  return start + (end - start) * t;
 }

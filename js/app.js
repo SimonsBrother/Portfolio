@@ -13,8 +13,7 @@ import {addPostProcessing} from "./postProcessing";
 // Scene
 const scene = new THREE.Scene();
 
-// TODO credit https://esahubble.org/copyright/ very clearly!
-// Background (made with https://jaxry.github.io/panorama-to-cubemap/ and https://www.deviantart.com/kirriaa/art/Free-star-sky-HDRI-spherical-map-719281328)
+// Background (made with https://jaxry.github.io/panorama-to-cubemap/ and https://www.spacespheremaps.com/silver-and-gold-nebulae-spheremaps/)
 const cubeTextureLoader = new THREE.CubeTextureLoader();
 cubeTextureLoader.setPath("img/cubemap_images/");
 const textureCube = await cubeTextureLoader.loadAsync( [
@@ -22,6 +21,7 @@ const textureCube = await cubeTextureLoader.loadAsync( [
   'py.png', 'ny.png',
   'pz.png', 'nz.png'
 ] );
+textureCube.intensity = 1.5;
 scene.background = textureCube;
 
 // Renderer

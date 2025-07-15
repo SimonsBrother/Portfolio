@@ -377,9 +377,9 @@ export function addBlackHole(scene, composer) {
 
   const blackHoleOutline = new OutlinePass( new THREE.Vector2( window.innerWidth, window.innerHeight ), scene, camera );
   blackHoleOutline.edgeStrength = 5;
-  blackHoleOutline.edgeGlow = 3;
-  blackHoleOutline.edgeThickness = 5;
-  blackHoleOutline.visibleEdgeColor = new THREE.Color( 0xeeff11 );
+  blackHoleOutline.edgeGlow = 5;
+  blackHoleOutline.edgeThickness = 7;
+  blackHoleOutline.visibleEdgeColor = new THREE.Color( 0xaaff11 );
   blackHoleOutline.hiddenEdgeColor = new THREE.Color( 0x000000 ); // Hide when eclipsed
   blackHoleOutline.selectedObjects = [sphere];
   composer.addPass(blackHoleOutline);

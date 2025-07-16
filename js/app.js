@@ -56,7 +56,7 @@ scene.add( light );
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 export let intersects = [];
-window.onpointermove = ( event ) => {
+window.onpointermove = window.ontouchmove = ( event ) => {
   pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
   pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 

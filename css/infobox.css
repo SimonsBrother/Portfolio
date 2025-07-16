@@ -1,0 +1,17 @@
+.infobox {
+  position: absolute;
+  z-index: 100;
+  display: block;
+
+  top: 10vh;
+  left: 10vh;
+
+  background: rgba(0,0,0,0.5);
+  border: 5px double white;
+  padding: 0.1em 2em; /* Top and bottom, sides */
+}
+
+.info {
+  color: white;
+  font-family: "Courier New", sans-serif;
+}

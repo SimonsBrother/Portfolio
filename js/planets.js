@@ -84,7 +84,9 @@ export class Planet {
         this.parent.add(this.model);
 
         // Add orbit line
-        this.parent.add(this.makeOrbitLine());
+        this.orbitLine = this.makeOrbitLine();
+        this.orbitLine.position.y = -planetSize
+        this.parent.add(this.orbitLine);
 
         // Update orbit and add to scene
         this.updatePlanet();
@@ -119,10 +121,10 @@ export class Planet {
   }
 
   // Construct orbit line
-  static orbitLineWidth = 0.02;
+  static orbitLineWidth = 0.08;
   makeOrbitLine() {
-    const geometry = new THREE.RingGeometry( this.orbitDistance, this.orbitDistance + Planet.orbitLineWidth, 50 );
-    const material = new THREE.MeshBasicMaterial( { color: 0x888888, side: THREE.DoubleSide } );
+    const geometry = new THREE.TorusGeometry( this.orbitDistance, Planet.orbitLineWidth, 10, 100 );
+    const material = new THREE.MeshBasicMaterial( { color: 0xdddddd, side: THREE.DoubleSide } );
     const mesh = new THREE.Mesh( geometry, material );
     mesh.rotation.x = Math.PI / 2;
     return mesh;

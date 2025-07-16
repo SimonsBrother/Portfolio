@@ -5,7 +5,7 @@ import {dimParticles, undimParticles} from "./blackhole";
 
 // Assign listeners
 // Focussing
-document.onmousedown = () => {
+document.onmouseup = document.ontouchend = () => {
   // If an object was clicked
   if (intersects.length > 0) {
     const obj = intersects[0].object
@@ -87,7 +87,7 @@ export function stopFollowing() {
  * @param fovMarginFactor the percentage of extra space that should be put around the followed object, based on its size.
  * A fovMarginFactor 1.1 would mean there would be empty space at the sides of the object of 10% the object's size.
  */
-export function updateFocus(fovMarginFactor = 1.5) {
+export function updateFocus(fovMarginFactor = 2) {
   if (followTarget === null) return; // Nothing being followed, return
 
   if (targetPos === null) targetPos = new THREE.Vector3();

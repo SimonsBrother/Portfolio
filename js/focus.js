@@ -7,12 +7,12 @@ import {dimParticles, undimParticles} from "./blackhole";
 // Focussing
 document.onmouseup = document.ontouchend = () => {
   // If an object was clicked
-  if (intersects.length > 0) {
+  for (const intersection of intersects) {
     const obj = intersects[0].object
-
-    // If its a valid object, set the follow target
-    if (isTargetInvalid(obj)) return;
-    setFollowTarget(obj);
+    if (!isTargetInvalid(obj)) { // If valid (not invalid)
+      setFollowTarget(obj);
+      return; // Return after the first valid object was found (which will be closest, ie the one the user clicked)
+    }
   }
 }
 // Unfocusing

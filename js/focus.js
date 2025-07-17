@@ -95,19 +95,7 @@ export function updateFocus(fovMarginFactor = 2) {
   if (targetPos === null) targetPos = new THREE.Vector3();
   followTarget.getWorldPosition(targetPos);
 
-  // By Claude; review/rework
-  // const cameraRight = new THREE.Vector3();
-  // camera.getWorldDirection(new THREE.Vector3()); // This updates the camera's matrix
-  // camera.matrix.extractBasis(cameraRight, new THREE.Vector3(), new THREE.Vector3());
-  //
-  // // Normalize and scale to desired distance
-  // cameraRight.normalize().multiplyScalar(followTarget.userData.planetSize);
-  //
-  // // Position camera to the left of the target (opposite of right vector)
-  // const newCameraPos = new THREE.Vector3().addVectors(targetPos, cameraRight.negate());
-
-  // targetPos.copy(newCameraPos)
-
+  targetPos = getTranslatedTargetPos();
 
   // Use trigonometry to work out the FOV needed; increasing fovMarginFactor increases the margin,
   const distance = camera.position.distanceTo(targetPos);
@@ -126,14 +114,39 @@ export function updateFocus(fovMarginFactor = 2) {
 }
 
 /**
+ * Calculates the position the controls should point to as a target,
+ * such that the camera points just to the left of the planet.
+ * @return {THREE.Vector3} the position the controls should point to.
+ */
+function getTranslatedTargetPos() {
+  // Only translate if the aspect ratio is wide enough; 1.2 was the point at which I found planets got cut off
+  // So if the aspect ratio is too small, return untranslated target pos
+  if (camera.aspect < 1.2) return targetPos;
+
+  // The vector work is by Claude, so beware (structure was tweaked a little); it makes sense, but I'm not vector savvy
+  const dir = new THREE.Vector3();
+  dir.subVectors(targetPos, camera.position).normalize();
+  const up = camera.up.clone().normalize(); // Get camera's up vector
+  const right = new THREE.Vector3().crossVectors(dir, up).normalize(); // Calc right vector via cross product
+  const left = right.clone().negate(); // Left is opposite of right
+  // Calculate new target position
+  return new THREE.Vector3().addVectors(targetPos, left.multiplyScalar(
+    followTarget.userData.planetSize // How much to go left by
+  ))
+}
+
+
+/**
  * Smoothly focuses on an object, by changing the FOV and control target
  * @param duration how long to take in milliseconds.
  */
 export function smoothFocusOnObject(duration = 1000) {
-  if (followTarget === null) return;
+  if (!followTarget) return;
+  if (!targetPos) targetPos = new THREE.Vector3();
   // The real world position is the target end position
-  const worldPosition = followTarget.getWorldPosition(new THREE.Vector3());
+  let targetPosition = targetPos.clone();
 
+  // The start position is where the camera is currently looking; get the direction of the camera, normalise, and multiply
   const startTarget = camera.getWorldDirection(new THREE.Vector3())
     .normalize()
     .multiplyScalar(1000);
@@ -144,17 +157,19 @@ export function smoothFocusOnObject(duration = 1000) {
   function animate() {
     if (followTarget === null) return;
     // Get expected progress and updated position of the follow target
-    followTarget.getWorldPosition(worldPosition);
+    targetPosition = targetPos.clone();
     const elapsed = performance.now() - startTime;
     const progress = Math.min(elapsed / duration, 1);
     const easeProgress = 1 - Math.pow(1 - progress, 3); // Ease in
 
     // Updates camera and controls
     // Move target to smoothly look at planet
-    controls.target.lerpVectors(startTarget, worldPosition, easeProgress);
+    controls.target.lerpVectors(startTarget, targetPosition, easeProgress);
     // Move camera for better depth and to help avoid FOV limit
+    const targetDistance = followTarget.userData.planetSize + 20; // Stay 15 units from the edge of the object (assuming the planetSize indicates the edge)
+    const alpha = targetDistance / targetPosition.distanceTo(originalCameraPos)
     camera.position.lerpVectors(originalCameraPos,
-      worldPosition.lerp(originalCameraPos, 0.3), // Only go a certain proportion via lerp, or else the camera will go inside the planet
+      targetPosition.lerp(originalCameraPos, alpha), // Only go a certain proportion via lerp, or else the camera will go inside the planet
       easeProgress);
     camera.fov = lerp(startFov, targetFov, easeProgress);
     camera.updateProjectionMatrix();

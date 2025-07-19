@@ -1,10 +1,19 @@
 {
   "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "three": "^0.176.0",
     "three.quarks": "^0.16.0",
     "troika-three-text": "^0.52.4"
   },
   "devDependencies": {
+    "@babel/cli": "^7.28.0",
+    "@babel/core": "^7.28.0",
+    "@babel/preset-env": "^7.28.0",
+    "@babel/preset-react": "^7.27.1",
     "vite": "^6.3.5"
+  },
+  "scripts": {
+    "build": "babel js -d lib_test"
   }
 }

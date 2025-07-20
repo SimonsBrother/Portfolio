@@ -1,8 +1,10 @@
-#nav-btn {
+#sidebar {
   position: absolute;
   z-index: 100;
   display: block;
+}
 
+#nav-btn {
   margin: 2em;
   width: 8vw;
   height: 8vw;
@@ -12,26 +14,22 @@
   cursor: pointer;
 
   transition: background 1s;
-  background: rgba(0, 0, 0, 0.6);
+}
+.nav-btn-clicked {
+  background: rgba(255, 255, 255, 1);
+}
+.nav-btn-default {
+  background: rgba(0, 0, 0, 0.6);;
 }
 
-.material-symbols-outlined#planet-icon {
+/* Icon */
+.material-symbols-outlined#planet-icon { /* Override font size like this, else it doesn't work */
   font-size: 4vw;
 }
-
 #planet-icon {
   color: white;
   transition: color 0.2s;
 }
-
 #nav-btn:hover #planet-icon {
   color: lawngreen;
-}
-
-#nav-btn:focus {
-  background: rgba(255, 255, 255, 1);
-}
-
-#nav-btn:focus #planet-icon {
-  color: black;
 }

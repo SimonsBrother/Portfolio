@@ -1,10 +1,10 @@
-#sidebar {
+.sidebar {
   position: absolute;
   z-index: 100;
   display: block;
 }
 
-#nav-btn {
+.nav-btn {
   margin: 2em;
   width: 8vw;
   height: 8vw;
@@ -13,23 +13,29 @@
   border-radius: 5px;
   cursor: pointer;
 
-  transition: background 1s;
+  transition: background-color 0.3s linear;
+  background-color: rgba(0, 0, 0, 0.6); /* default */
 }
-.nav-btn-clicked {
-  background: rgba(255, 255, 255, 1);
-}
-.nav-btn-default {
-  background: rgba(0, 0, 0, 0.6);;
+.nav-btn.clicked {
+  background-color: rgba(230, 230, 230, 1);
 }
 
 /* Icon */
-.material-symbols-outlined#planet-icon { /* Override font size like this, else it doesn't work */
+.material-symbols-outlined.nav-btn-icon { /* Override font size like this, else it doesn't work */
   font-size: 4vw;
 }
-#planet-icon {
+.nav-btn-icon {
   color: white;
-  transition: color 0.2s;
+  transition: color 0.3s, font-size 0.3s;
 }
-#nav-btn:hover #planet-icon {
-  color: lawngreen;
+/* When the button is hovered over, change icon style */
+.nav-btn:hover .nav-btn-icon {
+  font-size: 5vw;
+  color: #00CF00;
+}
+.nav-btn:active .nav-btn-icon {
+  font-size: 3vw;
+}
+.nav-btn-icon.clicked {
+  color: black; !important;
 }

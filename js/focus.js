@@ -40,6 +40,9 @@ let followTarget = null; // The object that the camera will attempt to follow.
 let targetPos = null; // The global position of the target object
 let targetFov = -1; // The target FOV of the camera; the camera may not yet be at that FOV
 
+// For updating UI
+export let setNavStateFunction = {setFollowing: null};
+
 /**
  * Returns true if the object selected is invalid, and so should NOT be focussed on
  * @param object the object to check.
@@ -58,6 +61,7 @@ export function isTargetInvalid(object) {
  */
 export function setFollowTarget(object) {
   dimParticles();
+  setNavStateFunction.setFollowing(); // 2 is following state
   followTarget = object.parent;
   controls.enablePan = false;
   controls.enableZoom = false;

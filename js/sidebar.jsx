@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import { createRoot } from 'react-dom/client';
+import {setNavStateFunction, stopFollowing} from "./focus";
 
 // Represents the different states the nav button should be in; treat this like an enum
 const NavBtnStates = {
@@ -30,11 +31,20 @@ function NavBtn({navState, onClick}) {
 
 function Sidebar(planetJsons) {
   const [navState, setNavState] = useState(NavBtnStates.Default);
+  setNavStateFunction.setFollowing = () => setNavState(NavBtnStates.Focussed);
   const onNavButtonClicked = () => {
-    // If the button is clicked in its default, show sidebar
-    if (navState === NavBtnStates.Default) setNavState(NavBtnStates.Sidebar);
-    // If the button is clicked and the sidebar is shown or the user is focussed on a planet, go back to default
-    else setNavState(NavBtnStates.Default);
+    switch (navState) {
+      case NavBtnStates.Default:
+        setNavState(NavBtnStates.Sidebar);
+        break;
+      case NavBtnStates.Sidebar:
+        setNavState(NavBtnStates.Default);
+        break;
+      case NavBtnStates.Focussed:
+        setNavState(NavBtnStates.Default);
+        stopFollowing();
+        break;
+    }
   }
 
   // const planetEntries = planetJsons.map(planetJson => <PlanetEntry planetJson={planetJson} />)

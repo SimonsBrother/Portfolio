@@ -15,11 +15,6 @@ document.onmouseup = document.ontouchend = () => {
     }
   }
 }
-// Unfocusing
-document.addEventListener("keydown", (key) => {
-  if (key.code !== "Escape") return;
-  stopFollowing()
-})
 
 /**
  * Sets up focussing for the camera.

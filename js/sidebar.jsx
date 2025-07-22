@@ -12,7 +12,7 @@ const NavBtnStates = {
   icons: [
     "planet",
     "arrow_back",
-    "step_out",
+    "arrows_output",
   ]
 }
 

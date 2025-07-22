@@ -14,7 +14,7 @@ const NavBtnStates = {
     "arrow_back",
     "arrows_output",
   ]
-}
+};
 
 
 function NavBtn({navState, onClick}) {
@@ -64,5 +64,7 @@ function PlanetEntry(planetJson, id) {
   );
 }
 
-const sidebarNode = document.getElementsByClassName("sidebar")[0];
-createRoot(sidebarNode).render(<Sidebar/>);
+export function addSidebar() {
+  const sidebarNode = document.getElementsByClassName("sidebar")[0];
+  createRoot(sidebarNode).render(<Sidebar/>);
+}

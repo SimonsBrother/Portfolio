@@ -11,7 +11,6 @@ import {
 } from "three.quarks";
 import {Vector3, Vector4} from "three";
 import {OutlinePass} from "three/addons/postprocessing/OutlinePass";
-import {camera} from "./app";
 
 const accretionTexture = await new THREE.TextureLoader().loadAsync("/img/img.png");
 const particleSystems = []
@@ -369,7 +368,7 @@ export async function setupTextDebris(scene, batchedRenderer) {
 }
 
 
-export function addBlackHole(scene, composer) {
+export function addBlackHole(scene, composer, camera) {
   const geometry = new THREE.SphereGeometry( 6, 32, 16 );
   const material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
   const sphere = new THREE.Mesh( geometry, material );

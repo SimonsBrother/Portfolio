@@ -6,8 +6,8 @@
 
 .nav-btn {
   margin: 2em;
-  width: 8vw;
-  height: 8vw;
+  width: 8em;
+  height: 8em;
 
   border: white 2px solid;
   border-radius: 5px;
@@ -22,7 +22,7 @@
 
 /* Icon */
 .material-symbols-outlined.nav-btn-icon { /* Override font size like this, else it doesn't work */
-  font-size: 4vw;
+  font-size: 4em;
 }
 .nav-btn-icon {
   color: white;
@@ -30,11 +30,11 @@
 }
 /* When the button is hovered over, change icon style */
 .nav-btn:hover .nav-btn-icon {
-  font-size: 5vw;
+  font-size: 5em;
   color: #00CF00;
 }
 .nav-btn:active .nav-btn-icon {
-  font-size: 3vw;
+  font-size: 3em;
 }
 .nav-btn-icon.clicked {
   color: black; !important;

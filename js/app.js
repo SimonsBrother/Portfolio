@@ -4,14 +4,15 @@ import { ArcballControls } from 'three/addons/controls/ArcballControls';
 
 import { Planet } from "./planets";
 import {
+  isTargetInvalid, setFollowTarget,
   setupFocusing,
   updateFocus,
 } from "./focus";
 import {addBlackHole, setupAccretionDisk} from "./blackhole";
 import {loadPlanets} from "./loadPlanets";
 import {addPostProcessing} from "./postProcessing";
+import {addSidebar} from "./sidebar";
 
-// Scene
 const scene = new THREE.Scene();
 
 // Background (made with https://jaxry.github.io/panorama-to-cubemap/ and https://www.spacespheremaps.com/silver-and-gold-nebulae-spheremaps/)
@@ -62,10 +63,25 @@ scene.add( light );
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 export let intersects = [];
-window.onpointermove = window.ontouchmove = ( event ) => {
-  pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-  pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+window.onmousemove = window.ontouchmove = ( event ) => {
+  // Get touch position, or mouse position
+  const clientX = (event.touches && event.touches[0].clientX) || event.clientX;
+  const clientY = (event.touches && event.touches[0].clientY) || event.clientY;
 
+  pointer.x = (clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(clientY / window.innerHeight) * 2 + 1;
+}
+document.onmouseup = document.ontouchend = () => {
+  // If an object was clicked
+  for (const intersection of intersects) {
+    const obj = intersects[0].object
+    if (!isTargetInvalid(obj)) { // If valid (not invalid)
+      setFollowTarget(obj);
+      return; // Return after the first valid object was found (which will be closest, ie the one the user clicked)
+    }
+  }
+}
+const updateRaycaster = () => {
   raycaster.setFromCamera( pointer, camera );
   intersects = raycaster.intersectObjects( scene.children );
 }
@@ -75,13 +91,15 @@ export const composer = addPostProcessing(scene, camera, renderer);
 
 // Other setup
 setupFocusing(camera, controls);
-addBlackHole(scene, composer);
+addBlackHole(scene, composer, camera);
 const batchedRenderer = await setupAccretionDisk( scene ); // For particles
 loadPlanets(scene);
+addSidebar();
 
 
 // Main loop
 function animate() {
+  updateRaycaster();
   Planet.updateAllPlanets();
   updateFocus();
   batchedRenderer.update(0.016); // Update black hole particles

@@ -1,20 +1,7 @@
 import * as THREE from "three";
-import {intersects} from "./app";
 import {outlinePass} from "./postProcessing";
 import {dimParticles, undimParticles} from "./blackhole";
 
-// Assign listeners
-// Focussing
-document.onmouseup = document.ontouchend = () => {
-  // If an object was clicked
-  for (const intersection of intersects) {
-    const obj = intersects[0].object
-    if (!isTargetInvalid(obj)) { // If valid (not invalid)
-      setFollowTarget(obj);
-      return; // Return after the first valid object was found (which will be closest, ie the one the user clicked)
-    }
-  }
-}
 
 /**
  * Sets up focussing for the camera.

@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { OrbitControls } from 'three/addons/controls/OrbitControls';
 import { ArcballControls } from 'three/addons/controls/ArcballControls';
 
 import { Planet } from "./planets";
@@ -31,6 +30,7 @@ const renderer = new THREE.WebGLRenderer();
 renderer.toneMapping = THREE.ReinhardToneMapping;
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
+renderer.capabilities.logarithmicDepthBuffer = false;
 
 // Handle window resizing
 window.addEventListener( 'resize', () => {
@@ -44,9 +44,9 @@ window.addEventListener( 'resize', () => {
 });
 
 // Camera and controls
-export const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+export const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.frustumCulled = false;
 camera.position.set(0, 0, 15)
-// const controls = new OrbitControls(camera, renderer.domElement)
 const controls = new ArcballControls(camera, renderer.domElement, scene);
 controls.cursorZoom = true;
 controls.adjustNearFar = true;

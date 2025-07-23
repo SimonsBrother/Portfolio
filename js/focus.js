@@ -164,14 +164,15 @@ function smoothFocusOnObject(cameraStartPos, cameraStartDir, duration = 1000) {
     // Get expected progress and updated position of the follow target
     const elapsed = performance.now() - startTime;
     const progress = Math.min(elapsed / duration, 1);
-    const easeProgress = 1 - Math.pow(1 - progress, 3); // Ease in
+    const easeProgress = easeInOut(progress);
 
     // Updates camera and controls; change target control to look at planet, change camera position to zoom in
+    console.log(targetStartPos, targetPos, controls.target)
     controls.target.lerpVectors(targetStartPos, targetPos, easeProgress);
     camera.position.lerpVectors(cameraStartPos, cameraPos, easeProgress);
 
     camera.updateProjectionMatrix();
-    controls.update();
+    // Do NOT update controls, or else the camera direction snaps
 
     // Loop via recursion, updating the frame
     if (progress < 1) {
@@ -185,6 +186,15 @@ function smoothFocusOnObject(cameraStartPos, cameraStartDir, duration = 1000) {
   }
 
   animate();
+}
+
+/**
+ * Copied from https://stackoverflow.com/questions/30007853/simple-easing-function-in-javascript
+ * @param t progress, from 0 to 1 inclusive.
+ * @return {number} a different value from 0 to 1 inclusive that follows the pattern of easing in and out.
+ */
+function easeInOut(t){
+  return t > 0.5 ? 4*Math.pow((t-1),3)+1 : 4*Math.pow(t,3);
 }
 
 /** TODO REDO

@@ -12,6 +12,26 @@ export function setupFocusing(camera_, controls_) {
   camera = camera_;
   controls = controls_;
   unfocussedFov = camera.fov;
+
+
+  // When the user looks around when focussed, without letting go, it gradually becomes less stable,
+  // this code forces the user to let go
+  let timeLastLetGo = 0;
+  const rotateDurationLimitWhenFocussed = 3000; //ms
+  controls.addEventListener("change", () => {
+    updateFocus(); // Minimise changes, think it helps
+    // If a target is being followed and sufficient time has passed, disable rotation
+    if (followTarget && performance.now() - timeLastLetGo > rotateDurationLimitWhenFocussed) {
+      controls.enableRotate = false;
+    }
+  });
+  // Re-enable rotation and reset the timer when the user lets go or grabs
+  const enableRotation = () => {
+    timeLastLetGo = performance.now();
+    controls.enableRotate = true;
+  }
+  controls.addEventListener("start", enableRotation);
+  controls.addEventListener("end", enableRotation);
 }
 // For ease of access, rather than having params for them in every function
 let camera = null;
@@ -20,7 +40,9 @@ let unfocussedFov = -1;
 
 let followTarget = null; // The object that the camera will attempt to follow.
 let targetPos = null; // The global position of the target object
-let targetFov = -1; // The target FOV of the camera; the camera may not yet be at that FOV
+let cameraPos = null;
+const focusMarginFactor = 3; // Increase to increase the space around the planet.
+let animating = false;
 
 // For updating UI
 export let setNavStateFunction = {setFollowing: null};
@@ -47,7 +69,6 @@ export function setFollowTarget(object) {
   followTarget = object.parent;
   controls.enablePan = false;
   controls.enableZoom = false;
-  // controls.update();
 
   outlinePass.selectedObjects = [object.parent];
   smoothFocusOnObject();
@@ -70,38 +91,35 @@ export function stopFollowing() {
 
 
 /**
- * Updates the position that the control should point to (its target) and the FOV the camera should point to, and applies the changes.
+ * Updates the position that the control should point to (its target), and applies it.
  * This should be part of the animation loop.
- * @param fovMarginFactor the percentage of extra space that should be put around the followed object, based on its size.
- * A fovMarginFactor 1.1 would mean there would be empty space at the sides of the object of 10% the object's size.
  */
-export function updateFocus(fovMarginFactor = 2) {
+export function updateFocus() {
   if (followTarget === null) return; // Nothing being followed, return
 
   if (targetPos === null) targetPos = new THREE.Vector3();
   followTarget.getWorldPosition(targetPos);
-
   targetPos = getTranslatedTargetPos();
 
-  // Use trigonometry to work out the FOV needed; increasing fovMarginFactor increases the margin,
-  const distance = camera.position.distanceTo(targetPos);
-  // which is multiplied by the target size to avoid achieve a similar size for all planets
-  targetFov = Math.atan((followTarget.userData.planetSize * fovMarginFactor) / (distance))
-    * (180 / Math.PI) // Convert to degrees
-    * 2 // Trigonometry only gets half of the FOV via a right angled triangle
+  const targetDistance = followTarget.userData.planetSize * focusMarginFactor;
+  const currentDirection = new THREE.Vector3();
+  camera.getWorldDirection(currentDirection);
 
-  // Update controls and camera, then update the values to be used, in that order - I don't know why, but it doesn't smoothly focus otherwise.
+  // Position camera at distance away from target, opposite to viewing direction
+  cameraPos = targetPos.clone().add(currentDirection.multiplyScalar(-targetDistance));
+
+  // Update
+  if (animating) return; // ...unless there's an animation running
+  controls.target.copy(targetPos);
+  camera.position.copy(cameraPos);
   controls.update();
   camera.updateProjectionMatrix();
-
-  // Update target values
-  controls.target.copy(targetPos); // Must not be updated or else the camera snaps
-  camera.fov = targetFov;
 }
 
 /**
  * Calculates the position the controls should point to as a target,
  * such that the camera points just to the left of the planet.
+ * Assumes that targetPos has been set to the world pos of target object.
  * @return {THREE.Vector3} the position the controls should point to.
  */
 function getTranslatedTargetPos() {
@@ -127,37 +145,33 @@ function getTranslatedTargetPos() {
  * @param duration how long to take in milliseconds.
  */
 export function smoothFocusOnObject(duration = 1000) {
-  if (!followTarget) return;
-  if (!targetPos) targetPos = new THREE.Vector3();
-  // The real world position is the target end position
-  let targetPosition = targetPos.clone();
+  if (!followTarget || !cameraPos) return;
+  if (!targetPos) targetPos = new THREE.Vector3(); // todo make targetPos = new vector from start?
+
+  animating = true;
+  controls.enableRotate = false;
 
   // The start position is where the camera is currently looking; get the direction of the camera, normalise, and multiply
   const startTarget = camera.getWorldDirection(new THREE.Vector3())
     .normalize()
     .multiplyScalar(1000);
   const originalCameraPos = camera.position.clone();
-  const startFov = camera.fov;
   const startTime = performance.now();
 
   function animate() {
     if (followTarget === null) return;
     // Get expected progress and updated position of the follow target
-    targetPosition = targetPos.clone();
     const elapsed = performance.now() - startTime;
     const progress = Math.min(elapsed / duration, 1);
     const easeProgress = 1 - Math.pow(1 - progress, 3); // Ease in
+    console.log(progress);
 
     // Updates camera and controls
-    // Move target to smoothly look at planet
-    controls.target.lerpVectors(startTarget, targetPosition, easeProgress);
-    // Move camera for better depth and to help avoid FOV limit
-    const targetDistance = followTarget.userData.planetSize + 20; // Stay 15 units from the edge of the object (assuming the planetSize indicates the edge)
-    const alpha = targetDistance / targetPosition.distanceTo(originalCameraPos)
-    camera.position.lerpVectors(originalCameraPos,
-      targetPosition.lerp(originalCameraPos, alpha), // Only go a certain proportion via lerp, or else the camera will go inside the planet
-      easeProgress);
-    camera.fov = lerp(startFov, targetFov, easeProgress);
+    // Change target to smoothly look at planet
+    controls.target.lerpVectors(startTarget, targetPos, easeProgress);
+    // Move camera
+    camera.position.lerpVectors(originalCameraPos, cameraPos, easeProgress);
+
     camera.updateProjectionMatrix();
     controls.update();
 
@@ -166,6 +180,9 @@ export function smoothFocusOnObject(duration = 1000) {
       requestAnimationFrame(animate);
     }
   }
+
+  animating = false;
+  controls.enableRotate = true;
 
   animate();
 }

@@ -87,7 +87,7 @@ const updateRaycaster = () => {
 }
 
 // Do post-processing last
-export const composer = addPostProcessing(scene, camera, renderer);
+const composer = addPostProcessing(scene, camera, renderer);
 
 // Other setup
 setupFocusing(camera, controls);

@@ -37,10 +37,12 @@ let camera = null;
 let controls = null;
 
 let followTarget = null; // The object that the camera will attempt to follow.
-let targetPos = null; // The global position of the target object todo maybe make this default vector?
-let cameraPos = null;
+const targetPos = new THREE.Vector3(); // The global position of the target object todo maybe make this default vector?
+const cameraPos = new THREE.Vector3();
 const focusMarginFactor = 3; // Increase to increase the space around the planet.
 let animating = false;
+let cameraStartPos = null; // On focus, this is set to the current camera position
+let targetStartPos = null; // On focus, this is set to a position the camera is currently pointing at
 
 // For updating UI
 export let setNavStateFunction = {setFollowing: null};
@@ -63,18 +65,18 @@ export function isTargetInvalid(object) {
  */
 export function setFollowTarget(object) {
   dimParticles();
-  setNavStateFunction.setFollowing(); // 2 is following state
+  if (setNavStateFunction) setNavStateFunction.setFollowing(); // 2 is following state
   followTarget = object.parent;
   controls.enablePan = false;
   controls.enableZoom = false;
 
   // Save these for animation
-  const cameraStartPos = camera.position.clone();
-  const cameraStartDir = camera.getWorldDirection(new THREE.Vector3())
+  cameraStartPos = camera.position.clone();
+  targetStartPos = getCameraDirectionAsPos();
 
   outlinePass.selectedObjects = [object.parent];
   updateFocus(false); // Get target values for animation, but don't apply them because it will snap to them
-  smoothFocusOnObject(cameraStartPos, cameraStartDir);
+  smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraPos, targetPos);
 }
 
 /**
@@ -86,8 +88,8 @@ export function stopFollowing() {
   controls.enableZoom = true;
 
   outlinePass.selectedObjects = [];
-  smoothlyUnfocus();
   undimParticles();
+  smoothlyUnfocus();
 }
 
 
@@ -97,17 +99,16 @@ export function stopFollowing() {
  */
 export function updateFocus(applyNewValues = true) {
   if (followTarget === null) return; // Nothing being followed, return
-  if (targetPos === null) targetPos = new THREE.Vector3();
   // Calculate "target"
   followTarget.getWorldPosition(targetPos);
-  targetPos = getTranslatedTargetPos();
+  targetPos.copy(getTranslatedTargetPos());
 
   // Calculate camera position
   const targetDistance = followTarget.userData.planetSize * focusMarginFactor;
   const currentDirection = new THREE.Vector3();
   camera.getWorldDirection(currentDirection);
   // Position camera at distance away from target, opposite to viewing direction
-  cameraPos = targetPos.clone().add(currentDirection.multiplyScalar(-targetDistance));
+  cameraPos.copy(targetPos.clone().add(currentDirection.multiplyScalar(-targetDistance)));
 
   // Update, unless there's an animation running, or was specifically told not to update (such as if this was called before animation)
   if (applyNewValues && !animating) {
@@ -145,33 +146,34 @@ function getTranslatedTargetPos() {
 /**
  * Smoothly focuses on an object, by changing the camera position control target
  * @param cameraStartPos the camera position to animate from.
- * @param cameraStartDir the camera direction to animate from.
+ * @param targetStartPos the position the camera is looking at.
+ * @param cameraEndPos the camera position to animate to.
+ * @param targetEndPos the position the camera should look to.
+ * @param updateControls if true, the controls will be updated throughout the animation,
+ * otherwise they wll only be updated at the end of the animation.
  * @param duration how long to take in milliseconds.
  */
-function smoothFocusOnObject(cameraStartPos, cameraStartDir, duration = 1000) {
+function smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraEndPos, targetEndPos, updateControls, duration = 1000) {
   animating = true;
   controls.enableRotate = false;
 
   // The start position is where the camera is currently looking; get the direction of the camera,
   // process it so that it's looking somewhere in the distance
-  const targetStartPos = cameraStartDir
-    .normalize()
-    .multiplyScalar(100);
+
   const startTime = performance.now();
 
   function animate() {
-    if (followTarget === null) return; // Can sometimes occur, maybe when following is stopped mid-animation
     // Get expected progress and updated position of the follow target
     const elapsed = performance.now() - startTime;
     const progress = Math.min(elapsed / duration, 1);
     const easeProgress = easeInOut(progress);
 
     // Updates camera and controls; change target control to look at planet, change camera position to zoom in
-    console.log(targetStartPos, targetPos, controls.target)
-    controls.target.lerpVectors(targetStartPos, targetPos, easeProgress);
-    camera.position.lerpVectors(cameraStartPos, cameraPos, easeProgress);
+    camera.position.lerpVectors(cameraStartPos, cameraEndPos, easeProgress);
+    controls.target.lerpVectors(targetStartPos, targetEndPos, easeProgress);
 
     camera.updateProjectionMatrix();
+    if (updateControls) controls.update();
     // Do NOT update controls, or else the camera direction snaps
 
     // Loop via recursion, updating the frame
@@ -182,6 +184,7 @@ function smoothFocusOnObject(cameraStartPos, cameraStartDir, duration = 1000) {
     else {
       animating = false;
       controls.enableRotate = true;
+      controls.update()
     }
   }
 
@@ -189,35 +192,27 @@ function smoothFocusOnObject(cameraStartPos, cameraStartDir, duration = 1000) {
 }
 
 /**
+ * Gets a position in the direction the camera is looking.
+ * @return {*}
+ */
+function getCameraDirectionAsPos(distance = 100) {
+  return camera.getWorldDirection(new THREE.Vector3())
+    .normalize()
+    .multiplyScalar(distance);
+}
+
+/**
  * Copied from https://stackoverflow.com/questions/30007853/simple-easing-function-in-javascript
  * @param t progress, from 0 to 1 inclusive.
  * @return {number} a different value from 0 to 1 inclusive that follows the pattern of easing in and out.
  */
-function easeInOut(t){
+function easeInOut(t) {
   return t > 0.5 ? 4*Math.pow((t-1),3)+1 : 4*Math.pow(t,3);
 }
 
-/** TODO REDO
- * Smoothly unfocuses by changing the FOV
- * @param duration how long to take in milliseconds.
+/**
+ * Smoothly unfocuses to the position and direction the user was previously looking.
  */
-function smoothlyUnfocus(duration = 1000) {
-  // const startFov = camera.fov;
-  // const startTime = performance.now();
-  //
-  // function animate() {
-  //   const elapsed = performance.now() - startTime;
-  //   const progress = Math.min(elapsed / duration, 1);
-  //   const easeProgress = 1 - Math.pow(1 - progress, 3); // Ease out
-  //
-  //   // Update camera
-  //   camera.fov = lerp(startFov, unfocussedFov, easeProgress);
-  //   camera.updateProjectionMatrix();
-  //
-  //   if (progress < 1) {
-  //     requestAnimationFrame(animate);
-  //   }
-  // }
-  //
-  // animate();
+function smoothlyUnfocus() {
+  smoothlyMoveCamera(camera.position.clone(), controls.target.clone(), cameraStartPos, targetStartPos, true);
 }

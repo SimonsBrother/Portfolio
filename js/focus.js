@@ -211,8 +211,11 @@ function easeInOut(t) {
 }
 
 /**
- * Smoothly unfocuses to the position and direction the user was previously looking.
+ * Smoothly unfocuses to look at the quasar.
  */
 function smoothlyUnfocus() {
-  smoothlyMoveCamera(camera.position.clone(), controls.target.clone(), cameraStartPos, targetStartPos, true);
+  const centreToCamera = camera.position.clone();
+  centreToCamera.multiplyScalar(1.5);
+
+  smoothlyMoveCamera(camera.position.clone(), controls.target.clone(), centreToCamera, new THREE.Vector3(), true);
 }

@@ -76,7 +76,7 @@ export function setFollowTarget(object) {
 
   outlinePass.selectedObjects = [object.parent];
   updateFocus(false); // Get target values for animation, but don't apply them because it will snap to them
-  smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraPos, targetPos);
+  smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraPos, targetPos, false);
 }
 
 /**
@@ -84,12 +84,12 @@ export function setFollowTarget(object) {
  */
 export function stopFollowing() {
   followTarget = null;
-  controls.enablePan = true;
-  controls.enableZoom = true;
 
   outlinePass.selectedObjects = [];
   undimParticles();
   smoothlyUnfocus();
+  controls.enablePan = true;
+  controls.enableZoom = true;
 }
 
 
@@ -150,16 +150,13 @@ function getTranslatedTargetPos() {
  * @param cameraEndPos the camera position to animate to.
  * @param targetEndPos the position the camera should look to.
  * @param updateControls if true, the controls will be updated throughout the animation,
- * otherwise they wll only be updated at the end of the animation.
+ * otherwise they wll only be updated at the end of the animation - this also levels the camera.
  * @param duration how long to take in milliseconds.
  */
 function smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraEndPos, targetEndPos, updateControls, duration = 1000) {
+  if (animating) return; // If an animation is already playing, ignore
   animating = true;
   controls.enableRotate = false;
-
-  // The start position is where the camera is currently looking; get the direction of the camera,
-  // process it so that it's looking somewhere in the distance
-
   const startTime = performance.now();
 
   function animate() {
@@ -171,10 +168,13 @@ function smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraEndPos, target
     // Updates camera and controls; change target control to look at planet, change camera position to zoom in
     camera.position.lerpVectors(cameraStartPos, cameraEndPos, easeProgress);
     controls.target.lerpVectors(targetStartPos, targetEndPos, easeProgress);
+    console.log(targetStartPos, targetEndPos, controls.target)
 
     camera.updateProjectionMatrix();
-    if (updateControls) controls.update();
-    // Do NOT update controls, or else the camera direction snaps
+    if (updateControls) {
+      camera.up.lerp(new THREE.Vector3(0, 1, 0), easeProgress);
+      controls.update();
+    }
 
     // Loop via recursion, updating the frame
     if (progress < 1) {
@@ -198,7 +198,8 @@ function smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraEndPos, target
 function getCameraDirectionAsPos(distance = 100) {
   return camera.getWorldDirection(new THREE.Vector3())
     .normalize()
-    .multiplyScalar(distance);
+    .multiplyScalar(distance)
+    .add(camera.position);
 }
 
 /**
@@ -217,5 +218,16 @@ function smoothlyUnfocus() {
   const centreToCamera = camera.position.clone();
   centreToCamera.multiplyScalar(1.5);
 
-  smoothlyMoveCamera(camera.position.clone(), controls.target.clone(), centreToCamera, new THREE.Vector3(), true);
+  smoothlyMoveCamera(camera.position.clone(), controls.target.clone(), centreToCamera, origin, true);
+}
+
+const overviewPosition = new THREE.Vector3(0, 20, 60)
+const origin = new THREE.Vector3(0, 0, 0)
+export function moveToOverviewPos() {
+  const camPos = camera.position.clone();
+  const target = getCameraDirectionAsPos();
+
+  // controls.target.copy(origin);
+  // controls.update();
+  smoothlyMoveCamera(camPos, target, overviewPosition, origin, true);
 }

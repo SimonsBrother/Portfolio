@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import { createRoot } from 'react-dom/client';
-import {setNavStateFunction, stopFollowing} from "./focus";
+import {moveToOverviewPos, setNavStateFunction, stopFollowing} from "./focus";
 
 // Represents the different states the nav button should be in; treat this like an enum
 const NavBtnStates = {
@@ -11,7 +11,7 @@ const NavBtnStates = {
   // The icons to show for each state, where the ID of the state represents the index of the icon name from Google icons
   icons: [
     "planet",
-    "arrow_back",
+    "planet",
     "arrows_output",
   ]
 };
@@ -29,16 +29,13 @@ function NavBtn({navState, onClick}) {
   )
 }
 
-function Sidebar(planetJsons) {
+function Sidebar({planetJsons}) {
   const [navState, setNavState] = useState(NavBtnStates.Default);
   setNavStateFunction.setFollowing = () => setNavState(NavBtnStates.Focussed);
   const onNavButtonClicked = () => {
     switch (navState) {
       case NavBtnStates.Default:
         setNavState(NavBtnStates.Sidebar);
-        break;
-      case NavBtnStates.Sidebar:
-        setNavState(NavBtnStates.Default);
         break;
       case NavBtnStates.Focussed:
         setNavState(NavBtnStates.Default);
@@ -47,24 +44,28 @@ function Sidebar(planetJsons) {
     }
   }
 
-  // const planetEntries = planetJsons.map(planetJson => <PlanetEntry planetJson={planetJson} />)
-  return <>
+  const planetEntries = planetJsons.map((planetJson, index) => <PlanetEntry text={planetJson.name} key={index} />)
+  return <div style={{position: "relative"}}>
     <NavBtn navState={navState} onClick={onNavButtonClicked} />
-    <ol>
-      {/*{planetEntries}*/}
-    </ol>
-  </>
+    <div className={`sidebar ${navState === NavBtnStates.Sidebar ? 'show-sidebar' : ''}`}>
+      <PlanetEntry imageUrl="img/back.svg" onClick={() => setNavState(NavBtnStates.Default)} />
+      <PlanetEntry text="Re-centre" imageUrl="img/quasar.svg" onClick={moveToOverviewPos} />
+      {planetEntries}
+    </div>
+  </div>
 }
 
-function PlanetEntry(planetJson, id) {
+function PlanetEntry({text, onClick, imageUrl="img/img.png"}) {
   return (
-    <li key={id}>
-      id
-    </li>
+    <div className="sidebar-item" onClick={onClick}>
+      <img src={imageUrl} alt="" className="sidebar-item-image" />
+      <h2 className="sidebar-item-text">{text}</h2>
+    </div>
   );
 }
 
 export function addSidebar() {
-  const sidebarNode = document.getElementsByClassName("sidebar")[0];
-  createRoot(sidebarNode).render(<Sidebar/>);
+  const sidebarNode = document.getElementsByClassName("sidebar-container")[0];
+  const testEntries = [{name: "Test1"}, {name: "Test2"}];
+  createRoot(sidebarNode).render(<Sidebar planetJsons={testEntries} />);
 }

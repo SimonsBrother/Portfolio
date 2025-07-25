@@ -54,7 +54,9 @@ function Sidebar({planetJsons}) {
   return <div style={{position: "relative"}}>
     <NavBtn navState={navState} onClick={onNavButtonClicked}/>
     <div className={`sidebar prevent-select ${navState === NavBtnStates.Sidebar ? 'show-sidebar' : ''}`}>
-      <PlanetEntry imageUrl="img/back.svg" onClick={() => setNavState(NavBtnStates.Default)} />
+      {/* Back button and re-centre */}
+      <PlanetEntry imageUrl={window.innerWidth < 600 ? "img/up.svg" : "img/back.svg" }
+                   onClick={() => setNavState(NavBtnStates.Default)} />
       <PlanetEntry text="Re-centre" imageUrl="img/quasar.svg" onClick={moveToOverviewPos} />
       {planetEntries}
     </div>

@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import {Planet} from "./planets";
-import {Vector3} from "three";
 
 function runValidationTests(scene) {
   try {

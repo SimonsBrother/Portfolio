@@ -3,7 +3,7 @@ import { ArcballControls } from 'three/addons/controls/ArcballControls';
 
 import { Planet } from "./planets";
 import {
-  isTargetInvalid, setFollowTarget,
+  handlePossibleFocusTarget,
   setupFocusing,
   updateFocus,
 } from "./focus";
@@ -59,7 +59,7 @@ const light = new THREE.PointLight( 0xffffff, 4, 0, 0);
 light.position.set( 0, 0, 0 );
 scene.add( light );
 
-// Pointer setup (for detecting clicked objects etc)
+// Pointer setup (for detecting clicked objects etc.)
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 export let intersects = [];
@@ -75,10 +75,8 @@ document.onmouseup = document.ontouchend = () => {
   // If an object was clicked
   for (const intersection of intersects) {
     const obj = intersects[0].object
-    if (!isTargetInvalid(obj)) { // If valid (not invalid)
-      setFollowTarget(obj);
-      return; // Return after the first valid object was found (which will be closest, ie the one the user clicked)
-    }
+    // Return after the first valid object was found (which will be closest, ie the one the user clicked)
+    if (handlePossibleFocusTarget(obj)) return;
   }
 }
 const updateRaycaster = () => {

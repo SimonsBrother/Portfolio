@@ -48,15 +48,36 @@ let targetStartPos = null; // On focus, this is set to a position the camera is 
 export let setNavStateFunction = {setFollowing: null};
 
 /**
- * Returns true if the object selected is invalid, and so should NOT be focussed on
+ * Checks if the object or its parent is valid, and starts following it if it is.
  * @param object the object to check.
- * @returns {boolean} true if the object passed is invalid.
+ * @returns {boolean} false if a focus target was found, true if the object or its parents are valid..
  */
-export function isTargetInvalid(object) {
-  return (!object.parent || // If there is no parent, or
-    (!object.parent.userData.isSelectable || // (a parent therefore exists) the parent is not selectable, or
-      (followTarget && object.parent.uuid === followTarget.uuid))) // if there is currently a followed target and that target is the same as the new target
-  // Then the target is invalid
+export function handlePossibleFocusTarget(object) {
+  if (isObjectValidFocusTarget(object)) {
+    setFollowTarget(object);
+    return true;
+  }
+  if (object.parent && isObjectValidFocusTarget(object.parent)) {
+    setFollowTarget(object.parent);
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Returns true if the object can be followed.
+ * @param object the object to check.
+ * @return {boolean} true if the object can be followed.
+ */
+function isObjectValidFocusTarget(object) {
+  // If selectable and if either there isn't a followTarget or it isn't already being followed, it's valid
+  try {
+    return object.userData && object.userData.isSelectable && (!followTarget || followTarget && object.uuid !== followTarget.uuid)
+  }
+  // Probably never happen
+  catch (e) {
+    return false;
+  }
 }
 
 /**
@@ -66,7 +87,8 @@ export function isTargetInvalid(object) {
 export function setFollowTarget(object) {
   dimParticles();
   if (setNavStateFunction) setNavStateFunction.setFollowing(); // 2 is following state
-  followTarget = object.parent;
+  console.log(object);
+  followTarget = object;
   controls.enablePan = false;
   controls.enableZoom = false;
 
@@ -74,7 +96,7 @@ export function setFollowTarget(object) {
   cameraStartPos = camera.position.clone();
   targetStartPos = getCameraDirectionAsPos();
 
-  outlinePass.selectedObjects = [object.parent];
+  outlinePass.selectedObjects = [object];
   updateFocus(false); // Get target values for animation, but don't apply them because it will snap to them
   smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraPos, targetPos, false);
 }
@@ -88,8 +110,10 @@ export function stopFollowing() {
   outlinePass.selectedObjects = [];
   undimParticles();
   smoothlyUnfocus();
-  controls.enablePan = true;
-  controls.enableZoom = true;
+  setTimeout(() => {
+    controls.enablePan = true;
+    controls.enableZoom = true;
+  }, 1000);
 }
 
 
@@ -168,7 +192,6 @@ function smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraEndPos, target
     // Updates camera and controls; change target control to look at planet, change camera position to zoom in
     camera.position.lerpVectors(cameraStartPos, cameraEndPos, easeProgress);
     controls.target.lerpVectors(targetStartPos, targetEndPos, easeProgress);
-    console.log(targetStartPos, targetEndPos, controls.target)
 
     camera.updateProjectionMatrix();
     if (updateControls) {
@@ -227,7 +250,13 @@ export function moveToOverviewPos() {
   const camPos = camera.position.clone();
   const target = getCameraDirectionAsPos();
 
-  // controls.target.copy(origin);
-  // controls.update();
+  controls.enablePan = false;
+  controls.enableZoom = false;
+
   smoothlyMoveCamera(camPos, target, overviewPosition, origin, true);
+
+  setTimeout(() => {
+    controls.enablePan = true;
+    controls.enableZoom = true;
+  }, 1000);
 }

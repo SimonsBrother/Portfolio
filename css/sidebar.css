@@ -3,6 +3,13 @@
   z-index: 100;
 }
 
+/*https://www.w3schools.com/howto/howto_css_disable_text_selection.asp*/
+.prevent-select {
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
 .nav-btn {
   margin: 2em;
   width: 8em;
@@ -69,6 +76,7 @@
   padding: 1em;
   padding-right: 3em;
   border-bottom: #555 1px solid;
+  cursor: pointer;
 }
 .sidebar-item-text {
   display: inline-block;

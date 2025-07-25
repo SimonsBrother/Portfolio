@@ -45,7 +45,7 @@ let cameraStartPos = null; // On focus, this is set to the current camera positi
 let targetStartPos = null; // On focus, this is set to a position the camera is currently pointing at
 
 // For updating UI
-export let setNavStateFunction = {setFollowing: null};
+export let setNavStateFunction = {setFollowing: null, setDefault: null};
 
 /**
  * Checks if the object or its parent is valid, and starts following it if it is.
@@ -86,8 +86,7 @@ function isObjectValidFocusTarget(object) {
  */
 export function setFollowTarget(object) {
   dimParticles();
-  if (setNavStateFunction) setNavStateFunction.setFollowing(); // 2 is following state
-  console.log(object);
+  if (setNavStateFunction.setFollowing) setNavStateFunction.setFollowing(); // 2 is following state
   followTarget = object;
   controls.enablePan = false;
   controls.enableZoom = false;
@@ -178,7 +177,13 @@ function getTranslatedTargetPos() {
  * @param duration how long to take in milliseconds.
  */
 function smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraEndPos, targetEndPos, updateControls, duration = 1000) {
-  if (animating) return; // If an animation is already playing, ignore
+  // If an animation is already playing, delay this one and return
+  if (animating) {
+    setTimeout(() => {
+      smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraEndPos, targetEndPos, updateControls, duration);
+    }, 100);
+    return;
+  }
   animating = true;
   controls.enableRotate = false;
   const startTime = performance.now();
@@ -247,6 +252,7 @@ function smoothlyUnfocus() {
 const overviewPosition = new THREE.Vector3(0, 20, 60)
 const origin = new THREE.Vector3(0, 0, 0)
 export function moveToOverviewPos() {
+  if (setNavStateFunction.setDefault) setNavStateFunction.setDefault();
   const camPos = camera.position.clone();
   const target = getCameraDirectionAsPos();
 

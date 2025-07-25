@@ -44,12 +44,11 @@ window.addEventListener( 'resize', () => {
 });
 
 // Camera and controls
-export const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.frustumCulled = false;
 camera.position.set(0, 0, 15)
 const controls = new ArcballControls(camera, renderer.domElement, scene);
 controls.cursorZoom = true;
-controls.adjustNearFar = true;
 controls.setGizmosVisible(false);
 controls.enableFocus = false;
 controls.update();
@@ -64,6 +63,7 @@ const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 export let intersects = [];
 window.onmousemove = window.ontouchmove = ( event ) => {
+  camera.updateProjectionMatrix();
   // Get touch position, or mouse position
   const clientX = (event.touches && event.touches[0].clientX) || event.clientX;
   const clientY = (event.touches && event.touches[0].clientY) || event.clientY;
@@ -72,6 +72,7 @@ window.onmousemove = window.ontouchmove = ( event ) => {
   pointer.y = -(clientY / window.innerHeight) * 2 + 1;
 }
 document.onmouseup = document.ontouchend = () => {
+
   // If an object was clicked
   for (const intersection of intersects) {
     const obj = intersects[0].object
@@ -81,7 +82,7 @@ document.onmouseup = document.ontouchend = () => {
 }
 const updateRaycaster = () => {
   raycaster.setFromCamera( pointer, camera );
-  intersects = raycaster.intersectObjects( scene.children );
+  intersects = raycaster.intersectObjects( Planet.models, true );
 }
 
 // Do post-processing last

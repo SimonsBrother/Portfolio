@@ -34,6 +34,7 @@ function NavBtn({navState, onClick}) {
 function Sidebar({planetJsons}) {
   const [navState, setNavState] = useState(NavBtnStates.Default);
   setNavStateFunction.setFollowing = () => setNavState(NavBtnStates.Focussed);
+  setNavStateFunction.setDefault = () => setNavState(NavBtnStates.Default);
   const onNavButtonClicked = () => {
     switch (navState) {
       case NavBtnStates.Default:

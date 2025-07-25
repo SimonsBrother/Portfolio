@@ -39,6 +39,12 @@ export class Planet {
   static planets = [];
 
   /**
+   * List of all the models that have been loaded, as part of a planet.
+   * @type {[]}
+   */
+  static models = [];
+
+  /**
    *
    * @param modelPath path to the model of the planet.
    * @param scene the scene to add the planet to.
@@ -74,6 +80,7 @@ export class Planet {
     loader.load(modelPath,
       (gltf) => {
         this.model = gltf.scene;
+        Planet.models.push(this.model);
         this.model.userData.isSelectable = true;
         this.model.userData.planetSize = this.planetSize;
 

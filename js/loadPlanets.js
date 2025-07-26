@@ -1,53 +1,51 @@
 import * as THREE from "three";
 import {Planet} from "./planets";
 
-function runValidationTests(scene) {
-  try {
-    testValidationCaseThrowsError("models/test.glb", null, 1, 1, 1, 1);
-    testValidationCaseThrowsError("models/test.glb", scene, 0, 1, 1, 1)
-    testValidationCaseThrowsError("models/test.glb", scene, -0.1, 1, 1, 1)
-    testValidationCaseThrowsError("models/test.glb", scene, 1, 1, 1, 0)
-    testValidationCaseThrowsError("models/test.glb", scene, 1, 1, 1, -0.1)
+export const planetJsons = [
+  {
+    name: "Test planet 1",
+    iconPath: "img/test.svg",
+    modelPath: "models/test.glb",
+    planetSize: 1.6,
 
-    // Test optional args
-    testValidationCaseThrowsError("models/test.glb", scene, 1, 1, 1, 1, new THREE.Vector3())
-    testValidationCaseThrowsError("models/test.glb", scene, 1, 1, 1, 1, new THREE.Euler(), new THREE.Vector3())
-    testValidationCaseThrowsError("models/test.glb", scene, 1, 1, 1, 1, new THREE.Euler(), new THREE.Euler(), new THREE.Euler())
-    console.log("Tests passed.")
-  }
-  catch (error) {
-    console.error(error);
-  }
-}
+    orbitRadius: 50,
+    orbitStartingAngle: 0,
+    orbitSpeed: 5,
 
-function testValidationCaseThrowsError(...args) {
-  try {
-    new Planet(...args);
+    planetRotationSpeed: new THREE.Euler(50, 0, 0),
+    orbitOrientation: new THREE.Euler(0, 0, 0),
+    orbitCentre: new THREE.Vector3(0, 5, 0),
+  },
+
+  {
+    name: "Monkey",
+    iconPath: "img/test.svg",
+    modelPath: "models/monkey.glb",
+    planetSize: 10,
+
+    orbitRadius: 100,
+    orbitStartingAngle: 180,
+    orbitSpeed: 4,
+
+    planetRotationSpeed: new THREE.Euler(20, 50, 10),
+    orbitOrientation: new THREE.Euler(0, 0, 0),
+    orbitCentre: new THREE.Vector3(0, 5, 0)
   }
-  catch(e) {
-    return;
-  }
-  throw "Validation tests failed.";
-}
+]
+
 
 export function loadPlanets(scene) {
-  // runValidationTests(scene);
-  new Planet("models/test.glb", scene,
-    50,
-    0,
-    5,
-    1.6,
-    new THREE.Euler(50, 0, 0),
-    new THREE.Euler(0, 0, 0),
-    new THREE.Vector3(0, 5, 0)
-  );
-  new Planet("models/monkey.glb", scene,
-    100,
-    180,
-    4,
-    10,
-    new THREE.Euler(20, 50, 10),
-    new THREE.Euler(0, 0, 0),
-    new THREE.Vector3(0, 5, 0)
-  );
+  for (const planetJson of planetJsons) {
+    new Planet(
+      planetJson.modelPath, scene,
+      planetJson.orbitRadius,
+      planetJson.orbitStartingAngle,
+      planetJson.orbitSpeed,
+      planetJson.planetSize,
+      planetJson.planetRotationSpeed,
+      planetJson.orbitOrientation,
+      planetJson.orbitCentre,
+      planetJson
+    );
+  }
 }

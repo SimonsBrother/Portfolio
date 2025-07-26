@@ -49,17 +49,19 @@ export class Planet {
    * @param modelPath path to the model of the planet.
    * @param scene the scene to add the planet to.
    * @param orbitRadius the radius of the orbit.
-   * @param orbitInitialAngle the starting angle of the orbit in degrees.
+   * @param orbitStartingAngle the starting angle of the orbit in degrees.
    * @param orbitSpeed the speed of the orbit in degrees per second.
    * @param planetSize the diameter of the planet.
    * @param planetRotationSpeed the speed that the planet rotates, as an Euler in degrees.
    * @param orbitOrientation the orientation of the orbit, as an Euler in degrees.
    * @param orbitCentre the point that the orbit moves around, as a Vector3.
+   * @param planetJson the full JSON used to construct the planet.
    */
-  constructor(modelPath, scene, orbitRadius, orbitInitialAngle, orbitSpeed, planetSize,
+  constructor(modelPath, scene, orbitRadius, orbitStartingAngle, orbitSpeed, planetSize,
               planetRotationSpeed = new THREE.Euler(0, 0.1, 0),
               orbitOrientation = new THREE.Euler(0, 0, 0),
-              orbitCentre = new THREE.Vector3(0, 0, 0)) {
+              orbitCentre = new THREE.Vector3(0, 0, 0),
+              planetJson) {
     // Validate
     if (!scene || orbitRadius <= 0 || planetSize <= 0 ||
       !planetRotationSpeed.isEuler || !orbitOrientation.isEuler || !orbitCentre.isVector3) {
@@ -67,12 +69,13 @@ export class Planet {
     }
 
     this.orbitDistance = orbitRadius;
-    this.initialAngle = orbitInitialAngle;
+    this.orbitStartingAngle = orbitStartingAngle;
     this.orbitSpeed = orbitSpeed;
     this.planetSize = planetSize;
     this.planetRotationSpeed = radiansEuler(planetRotationSpeed);
     this.orbitOrientation = radiansEuler(orbitOrientation);
     this.centre = orbitCentre;
+    this.planetJson = planetJson;
 
     this.model = null;
 
@@ -117,7 +120,7 @@ export class Planet {
     const time = getElapsedTime();
 
     // Update orbit
-    let angle = radians(this.initialAngle + this.orbitSpeed * time);
+    let angle = radians(this.orbitStartingAngle + this.orbitSpeed * time);
     this.model.position.x = this.orbitDistance * Math.cos(angle) + this.centre.x;
     this.model.position.z = this.orbitDistance * Math.sin(angle) + this.centre.z;
 

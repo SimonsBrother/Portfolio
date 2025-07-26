@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import { createRoot } from 'react-dom/client';
 import {moveToOverviewPos, setFollowTarget, setNavStateFunction, stopFollowing} from "./focus";
 import {Planet} from "./planets";
+import {planetJsons} from "./loadPlanets";
 
 // Represents the different states the nav button should be in; treat this like an enum
 const NavBtnStates = {
@@ -31,7 +32,7 @@ function NavBtn({navState, onClick}) {
   )
 }
 
-function Sidebar({planetJsons}) {
+function Sidebar({planetJsonsToShow}) {
   const [navState, setNavState] = useState(NavBtnStates.Default);
   setNavStateFunction.setFollowing = () => setNavState(NavBtnStates.Focussed);
   setNavStateFunction.setDefault = () => setNavState(NavBtnStates.Default);
@@ -47,9 +48,10 @@ function Sidebar({planetJsons}) {
     }
   }
 
-  const planetEntries = planetJsons.map((planetJson, index) => <PlanetEntry text={planetJson.name}
-                                                                            onClick={() => setFollowTarget(Planet.planets[index].model)}
-                                                                            key={index} />)
+  const planetEntries = planetJsonsToShow.map((planetJson, index) => <PlanetEntry text={planetJson.name}
+                                                                                  onClick={() => setFollowTarget(Planet.planets[index].model)}
+                                                                                  imageUrl={planetJson.iconPath}
+                                                                                  key={index} />)
 
   return <div style={{position: "relative"}}>
     <NavBtn navState={navState} onClick={onNavButtonClicked}/>
@@ -74,6 +76,5 @@ function PlanetEntry({text, onClick, imageUrl="img/img.png"}) {
 
 export function addSidebar() {
   const sidebarNode = document.getElementsByClassName("sidebar-container")[0];
-  const testEntries = [{name: "Test1"}, {name: "Test2"}];
-  createRoot(sidebarNode).render(<Sidebar planetJsons={testEntries} />);
+  createRoot(sidebarNode).render(<Sidebar planetJsonsToShow={planetJsons} />);
 }

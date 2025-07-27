@@ -58,7 +58,7 @@ const light = new THREE.PointLight( 0xffffff, 4, 0, 0);
 light.position.set( 0, 0, 0 );
 scene.add( light );
 
-// Pointer setup (for detecting clicked objects etc.)
+// Pointer setup (for detecting clicked objects etc.) TODO could optimise by combining everything into one on-click function?
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 export let intersects = [];

@@ -32,10 +32,19 @@ function NavBtn({navState, onClick}) {
   )
 }
 
+/**
+ * Sidebar component
+ * @param planetJsonsToShow the list of planet JSON data
+ * @return {JSX.Element}
+ */
 function Sidebar({planetJsonsToShow}) {
+  // Define the navigation state
   const [navState, setNavState] = useState(NavBtnStates.Default);
+  // Setup functions that the code handling focus can use; use this round about way to control state outside the function
   setNavStateFunction.setFollowing = () => setNavState(NavBtnStates.Focussed);
   setNavStateFunction.setDefault = () => setNavState(NavBtnStates.Default);
+
+  // Setup how the nav button should react to being clicked
   const onNavButtonClicked = () => {
     switch (navState) {
       case NavBtnStates.Default:
@@ -48,6 +57,7 @@ function Sidebar({planetJsonsToShow}) {
     }
   }
 
+  // Create planet entries from JSON
   const planetEntries = planetJsonsToShow.map((planetJson, index) => <PlanetEntry text={planetJson.name}
                                                                                   onClick={() => setFollowTarget(Planet.planets[index].model)}
                                                                                   imageUrl={planetJson.iconPath}
@@ -65,6 +75,13 @@ function Sidebar({planetJsonsToShow}) {
   </div>
 }
 
+/**
+ * Entry component in the sidebar
+ * @param text the text to show on the sidebar
+ * @param onClick the function to call when the entry is clicked
+ * @param imageUrl the icon to show for this element.
+ * @return {JSX.Element}
+ */
 function PlanetEntry({text, onClick, imageUrl="img/img.png"}) {
   return (
     <div className="sidebar-item" onClick={onClick}>
@@ -74,6 +91,9 @@ function PlanetEntry({text, onClick, imageUrl="img/img.png"}) {
   );
 }
 
+/**
+ * Adds the sidebar to the HTML document.
+ */
 export function addSidebar() {
   const sidebarNode = document.getElementsByClassName("sidebar-container")[0];
   createRoot(sidebarNode).render(<Sidebar planetJsonsToShow={planetJsons} />);

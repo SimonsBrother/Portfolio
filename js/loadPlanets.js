@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import {Planet} from "./planets";
 
+// All planet data is defined here
 export const planetJsons = [
   {
     name: "Test planet 1",
@@ -33,7 +34,10 @@ export const planetJsons = [
   }
 ]
 
-
+/**
+ * Creates planet objects from the planet JSONs.
+ * @param scene the scene to add the planets to.
+ */
 export function loadPlanets(scene) {
   for (const planetJson of planetJsons) {
     new Planet(

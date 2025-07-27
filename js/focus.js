@@ -9,6 +9,8 @@ import {dimParticles, undimParticles} from "./blackhole";
  * @param controls_ the controls (ideally orbit control, arcball may work)
  */
 export function setupFocusing(camera_, controls_) {
+  if (!camera_) throw `Bad camera: ${camera_}`;
+  if (!controls_) throw `Bad control: ${controls_}`;
   camera = camera_;
   controls = controls_;
 
@@ -37,10 +39,10 @@ let camera = null;
 let controls = null;
 
 let followTarget = null; // The object that the camera will attempt to follow.
-const targetPos = new THREE.Vector3(); // The global position of the target object todo maybe make this default vector?
+const targetPos = new THREE.Vector3(); // The global position of the target object
 const cameraPos = new THREE.Vector3();
 const focusMarginFactor = 2.5; // Increase to increase the space around the planet.
-let animating = false;
+let animating = false; // Flag that helps process and work around animations
 let cameraStartPos = null; // On focus, this is set to the current camera position
 let targetStartPos = null; // On focus, this is set to a position the camera is currently pointing at
 
@@ -85,6 +87,7 @@ function isObjectValidFocusTarget(object) {
  * @param object the object to focus on.
  */
 export function setFollowTarget(object) {
+  if (!object) throw `Bad object ${object}`;
   dimParticles();
   if (setNavStateFunction.setFollowing) setNavStateFunction.setFollowing(); // 2 is following state
   followTarget = object;
@@ -177,6 +180,11 @@ function getTranslatedTargetPos() {
  * @param duration how long to take in milliseconds.
  */
 function smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraEndPos, targetEndPos, updateControls, duration = 1000) {
+  if (!cameraStartPos) throw `Bad cameraStartPos: ${cameraStartPos}`;
+  if (!targetStartPos) throw `Bad targetStartPos: ${targetStartPos}`;
+  if (!cameraEndPos) throw `Bad cameraEndPos: ${cameraEndPos}`;
+  if (!targetEndPos) throw `Bad targetEndPos: ${targetEndPos}`;
+
   // If an animation is already playing, delay this one and return
   if (animating) {
     setTimeout(() => {
@@ -249,8 +257,12 @@ function smoothlyUnfocus() {
   smoothlyMoveCamera(camera.position.clone(), controls.target.clone(), centreToCamera, origin, true);
 }
 
+
 const overviewPosition = new THREE.Vector3(0, 20, 60)
 const origin = new THREE.Vector3(0, 0, 0)
+/**
+ * Moves the camera from the current position to a defined overview position.
+ */
 export function moveToOverviewPos() {
   if (setNavStateFunction.setDefault) setNavStateFunction.setDefault();
   const camPos = camera.position.clone();

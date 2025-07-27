@@ -15,6 +15,7 @@ import {OutlinePass} from "three/addons/postprocessing/OutlinePass";
 const accretionTexture = await new THREE.TextureLoader().loadAsync("/img/img.png");
 const particleSystems = []
 
+// Default configuration for particle systems
 const defaultSettings = {
   looping: true,
   duration: 4,
@@ -59,12 +60,21 @@ const defaultSettings = {
 };
 const accretionDiskBaseY = 0;
 
+/**
+ * Helper for creating particle systems from the default settings.
+ * @param overwrittenSettings JSON object the particle system settings to overwrite the defaults with.
+ * @param length the length of trails, if enabled (this must be done separately due to what I think is a bug in quarks).
+ * @param batchedRenderer the batched renderer instance to add the system to.
+ * @param scene the scene to add the emitter to.
+ * @param y the y position to set the emitter to.
+ * @return {QUARKS.ParticleEmitter<>} the emitter, for further configuration as needed.
+ */
 function makeSystem(overwrittenSettings, length, batchedRenderer, scene, y=0) {
   const particleSystem = new QUARKS.ParticleSystem({
     ...defaultSettings,
     ...overwrittenSettings,
   });
-  particleSystem.rendererEmitterSettings.startLength = new ConstantValue(50);
+  particleSystem.rendererEmitterSettings.startLength = new ConstantValue(length);
   particleSystems.push(particleSystem);
 
   // Add the particle system to the batched renderer
@@ -78,6 +88,11 @@ function makeSystem(overwrittenSettings, length, batchedRenderer, scene, y=0) {
 }
 
 
+/**
+ * Creates the particle systems and batched renderer.
+ * @param scene the scene to add the batched renderer and accretion disk to.
+ * @return {Promise<QUARKS.BatchedRenderer>}
+ */
 export async function setupAccretionDisk(scene) {
   const batchedRenderer = new QUARKS.BatchedRenderer();
 
@@ -281,8 +296,13 @@ export async function setupAccretionDisk(scene) {
   return batchedRenderer;
 }
 
-
+/**
+ * Adds 0 and 1 "text debris" to the accretion disk.
+ * @param scene the scene to add the particle systems to.
+ * @param batchedRenderer the batched renderer instance to add the particle systems to.
+ */
 export async function setupTextDebris(scene, batchedRenderer) {
+  // Load in materials
   const zeroMaterial = new THREE.MeshBasicMaterial({
     map: await new THREE.TextureLoader().loadAsync("/img/zero.png"),
     color: 0x09C405,
@@ -322,6 +342,7 @@ export async function setupTextDebris(scene, batchedRenderer) {
     ],
   }
 
+  // Create multiple configurations for different parts of the quasar
   const configurations = [
     {
       shape: new DonutEmitter({
@@ -361,6 +382,7 @@ export async function setupTextDebris(scene, batchedRenderer) {
     }
   ]
 
+  // For each configuration, make a system for 1 and 0 textures
   for (const configuration of configurations) {
     makeSystem({...baseConfig, ...configuration, material: zeroMaterial}, 0, batchedRenderer, scene);
     makeSystem({...baseConfig, ...configuration, material: oneMaterial}, 0, batchedRenderer, scene);
@@ -368,7 +390,17 @@ export async function setupTextDebris(scene, batchedRenderer) {
 }
 
 
+/**
+ * Creates a black sphere and adds it to the scene.
+ * @param scene the scene to add the black hole to.
+ * @param composer the post-processing composer; this adds the outline of the black hole.
+ * @param camera the camera, for adding post-processing.
+ */
 export function addBlackHole(scene, composer, camera) {
+  if (!scene) throw `Bad scene: ${scene}`;
+  if (!composer) throw `Bad composer: ${scene}`;
+  if (!camera) throw `Bad camera: ${scene}`;
+
   const geometry = new THREE.SphereGeometry( 6, 32, 16 );
   const material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
   const sphere = new THREE.Mesh( geometry, material );
@@ -385,12 +417,18 @@ export function addBlackHole(scene, composer, camera) {
 }
 
 
+/**
+ * Dims the accretion disk.
+ */
 export function dimParticles() {
   for (const system of particleSystems) {
     system.startColor.color.w = 0.1;
   }
 }
 
+/**
+ * Brightens the accretion disk.
+ */
 export function undimParticles() {
   for (const system of particleSystems) {
     system.startColor.color.w = 1;

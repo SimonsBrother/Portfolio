@@ -1,3 +1,28 @@
 body {
   background: black;
 }
+
+.above-threejs-canvas {
+  position: absolute;
+  z-index: 100;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+
+  height: 100%;
+  width: 100%;
+  pointer-events: none;
+}
+@media only screen and (max-width: 600px) {
+  .above-threejs-canvas {
+    flex-direction: column;
+  }
+}
+
+/*https://www.w3schools.com/howto/howto_css_disable_text_selection.asp*/
+.prevent-select {
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}

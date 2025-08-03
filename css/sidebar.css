@@ -1,26 +1,17 @@
-.above-threejs-canvas {
-  position: absolute;
-  z-index: 100;
-}
-
-/*https://www.w3schools.com/howto/howto_css_disable_text_selection.asp*/
-.prevent-select {
-  -webkit-user-select: none; /* Safari */
-  -ms-user-select: none; /* IE 10 and IE 11 */
-  user-select: none; /* Standard syntax */
-}
-
 .nav-btn {
   margin: 2em;
-  width: 8em;
-  height: 8em;
+  width: 7em;
+  height: 7em;
 
-  border: white 2px solid;
+  /*border: white 2px solid;*/
+  border: 5px double white;
   border-radius: 5px;
   cursor: pointer;
 
-  transition: opacity 0.3s linear;
   background-color: rgba(0, 0, 0, 0.6); /* default */
+  transition: opacity 0.3s linear;
+
+  pointer-events: auto;
 }
 .nav-btn.clicked {
   /*background-color: rgba(230, 230, 230, 1);*/
@@ -47,10 +38,11 @@
   color: black;
 }
 
-/* Sidebar */
+/* Sidebar todo scrollbar styles */
 .sidebar {
   background: rgba(0, 0, 0, 0.8);
   color: white;
+  z-index: 101;
 
   position: absolute; /* Force sidebar to overlap nav button*/
   top: 0;
@@ -60,6 +52,7 @@
   transition: transform 0.3s; /* Animate */
 
   /*padding-right: 2em;*/
+  pointer-events: auto;
 }
 @media only screen and (max-width: 600px) {
   .sidebar {

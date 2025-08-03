@@ -1,14 +1,46 @@
 .infobox {
-  position: absolute;
-  z-index: 100;
-  display: block;
-
-  top: 10vh;
-  left: 10vh;
-
   background: rgba(0,0,0,0.5);
   border: 5px double white;
+  border-radius: 5px;
   padding: 0.1em 2em; /* Top and bottom, sides */
+}
+
+.title {
+  font-size: 1.5em;
+  margin: 1em;
+  text-align: center;
+  align-self: flex-end;
+  /*transform: perspective(300px) rotate3d(0, -0.2, 0, 10deg);*/
+}
+
+.scroll-arrow {
+  visibility: hidden;
+}
+
+@media only screen and (max-width: 600px) {
+  .project-info {
+    display: flex;
+    justify-content: flex-end;
+    flex-direction: column;
+    text-align: center;
+
+    height: 100%;
+  }
+  .title {
+    position: static;
+    margin: 0 2em;
+
+    font-size: 1em;
+    transform: none;
+  }
+  .scroll-arrow > .material-symbols-outlined {
+    visibility: visible;
+    position: static;
+
+    color: white;
+    font-size: 5em;
+    text-shadow: 0 0 5px black;
+  }
 }
 
 .info {

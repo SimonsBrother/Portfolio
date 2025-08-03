@@ -11,6 +11,7 @@ import {addBlackHole, setupAccretionDisk} from "./blackhole";
 import {loadPlanets} from "./loadPlanets";
 import {addPostProcessing} from "./postProcessing";
 import {addSidebar} from "./sidebar";
+import {addProjectInfoElements} from "./projectinfo";
 
 const scene = new THREE.Scene();
 
@@ -29,6 +30,7 @@ scene.background = textureCube;
 const renderer = new THREE.WebGLRenderer();
 renderer.toneMapping = THREE.ReinhardToneMapping;
 renderer.setSize( window.innerWidth, window.innerHeight );
+renderer.domElement.classList.add("prevent-select");
 document.body.appendChild( renderer.domElement );
 renderer.capabilities.logarithmicDepthBuffer = false;
 
@@ -94,6 +96,7 @@ addBlackHole(scene, composer, camera);
 const batchedRenderer = await setupAccretionDisk( scene ); // For particles
 loadPlanets(scene);
 addSidebar();
+addProjectInfoElements();
 
 
 // Main loop

@@ -38,7 +38,7 @@ export function setupFocusing(camera_, controls_) {
 let camera = null;
 let controls = null;
 
-let followTarget = null; // The object that the camera will attempt to follow.
+export let followTarget = null; // The object that the camera will attempt to follow.
 const targetPos = new THREE.Vector3(); // The global position of the target object
 const cameraPos = new THREE.Vector3();
 const focusMarginFactor = 2.5; // Increase to increase the space around the planet.
@@ -164,7 +164,7 @@ function getTranslatedTargetPos() {
   const left = right.clone().negate(); // Left is opposite of right
   // Calculate new target position
   return new THREE.Vector3().addVectors(targetPos, left.multiplyScalar(
-    followTarget.userData.planetSize // How much to go left by
+    -followTarget.userData.planetSize // How much to go left by
   ))
 }
 

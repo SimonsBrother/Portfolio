@@ -48,6 +48,7 @@ let targetStartPos = null; // On focus, this is set to a position the camera is 
 
 // For updating UI
 export let setNavStateFunction = {setFollowing: null, setDefault: null};
+export let setTitleFunction = {setTitle: null};
 
 /**
  * Checks if the object or its parent is valid, and starts following it if it is.
@@ -89,8 +90,9 @@ function isObjectValidFocusTarget(object) {
 export function setFollowTarget(object) {
   if (!object) throw `Bad object ${object}`;
   dimParticles();
-  if (setNavStateFunction.setFollowing) setNavStateFunction.setFollowing(); // 2 is following state
   followTarget = object;
+  if (setNavStateFunction.setFollowing) setNavStateFunction.setFollowing(); // 2 is following state
+  if (setTitleFunction.setTitle) setTitleFunction.setTitle(followTarget.userData.planetJson.name);
   controls.enablePan = false;
   controls.enableZoom = false;
 
@@ -108,6 +110,7 @@ export function setFollowTarget(object) {
  */
 export function stopFollowing() {
   followTarget = null;
+  if (setTitleFunction.setTitle) setTitleFunction.setTitle("");
 
   outlinePass.selectedObjects = [];
   undimParticles();

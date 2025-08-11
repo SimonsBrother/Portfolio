@@ -86,6 +86,7 @@ export class Planet {
         Planet.models.push(this.model);
         this.model.userData.isSelectable = true;
         this.model.userData.planetSize = this.planetSize;
+        this.model.userData.planetJson = this.planetJson;
 
         // Placeholder parent to store, position, and orient both the planet and its orbit. This is at the centre of the orbit.
         this.parent = new THREE.Object3D();

@@ -1,24 +1,25 @@
-
 document.addEventListener("DOMContentLoaded", () => {
-  const infoboxElements = document.getElementsByClassName("border");
+  const updateRate = 30; // times per second
+  const quasarBorderElements = document.getElementsByClassName("quasar-border");
 
-  let progress = 0;
-  let direction = 0;
-  setInterval( () => {
-    for (const infoboxElement of infoboxElements) {
-      progress += 0.2e-5; // Increase to speed up
-      direction += Math.abs(5 * Math.sin(2 * progress));
-      if (direction >= 360) {
-        direction = 0;
-        progress = 0;
-      }
-
-      setGradient(infoboxElement, direction);
-    }
-  }, 1/30 // update 30 times per second
-  );
-
+  setInterval( () => {quasarGradient(quasarBorderElements)},
+    1/updateRate);
 });
+
+let quasarBorderProgress = 0;
+let quasarBorderDirection = 0;
+function quasarGradient(elements) {
+  for (const element of elements) {
+    quasarBorderProgress += 0.2e-5; // Increase to speed up
+    quasarBorderDirection += Math.abs(5 * Math.sin(2 * quasarBorderProgress));
+    if (quasarBorderDirection >= 360) {
+      quasarBorderDirection = 0;
+      quasarBorderProgress = 0;
+    }
+
+    setGradient(element, quasarBorderDirection);
+  }
+}
 
 function setGradient(element, direction) {
   element.style.borderImageSource =

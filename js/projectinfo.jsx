@@ -11,7 +11,7 @@ function ProjectTitle() {
   const visibility = title === '' ? 'hidden' : 'visible'
 
   return <div style={ {visibility} }>
-    <div className="infobox title border">
+    <div className="infobox title border quasar-border">
       <h1 className="info">
         { title }
       </h1>

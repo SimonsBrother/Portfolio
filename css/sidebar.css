@@ -26,7 +26,7 @@
 /* When the button is hovered over, change icon style */
 .nav-btn:hover .nav-btn-icon {
   font-size: 5em;
-  color: #00CF00;
+  color: #82ff39;
 }
 .nav-btn:active .nav-btn-icon {
   font-size: 3em;
@@ -67,7 +67,16 @@
   padding-right: 3em;
   border-bottom: #555 1px solid;
   cursor: pointer;
+
+  transition: color 0.3s;
 }
+.sidebar-item:hover {
+  color: #82ff39;
+}
+.sidebar-item:hover .sidebar-item-image {
+  filter: sepia(1) hue-rotate(45deg);
+}
+
 .sidebar-item-text {
   display: inline-block;
   font-family: "Source Code Pro", "Courier New", monospace;
@@ -76,4 +85,5 @@
   width: 4em;
   height: 4em;
   padding-right: 2em;
+  transition: filter 0.3s;
 }

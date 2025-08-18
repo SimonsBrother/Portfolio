@@ -24,7 +24,7 @@ function NavBtn({navState, onClick}) {
   return (
     <button
       // Only show the clicked style if the sidebar is shown, not when focussed (and obviously not when in default state)
-      className={`nav-btn ${clickedClass}`}
+      className={`nav-btn border ${clickedClass}`}
       onClick={onClick}>
       <i className={`material-symbols-outlined nav-btn-icon prevent-select
       ${clickedClass}`}>{NavBtnStates.icons.at(navState)}</i>

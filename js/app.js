@@ -12,6 +12,7 @@ import {loadPlanets} from "./loadPlanets";
 import {addPostProcessing} from "./postProcessing";
 import {addSidebar} from "./sidebar";
 import {addProjectInfoElements} from "./projectinfo";
+import {animateCamera, setupCameraInitialState} from "./introAnimation";
 
 const scene = new THREE.Scene();
 
@@ -48,12 +49,14 @@ window.addEventListener( 'resize', () => {
 // Camera and controls
 const camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.frustumCulled = false;
-camera.position.set(0, 0, 15)
+
 const controls = new ArcballControls(camera, renderer.domElement, scene);
 controls.cursorZoom = true;
 controls.setGizmosVisible(false);
 controls.enableFocus = false;
 controls.update();
+
+setupCameraInitialState(camera, controls);
 
 // Lighting
 const light = new THREE.PointLight( 0xffffff, 4, 0, 0);
@@ -101,6 +104,7 @@ addProjectInfoElements();
 
 // Main loop
 function animate() {
+  animateCamera();
   updateRaycaster();
   Planet.updateAllPlanets();
   updateFocus();

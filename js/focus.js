@@ -171,6 +171,9 @@ function getTranslatedTargetPos() {
   ))
 }
 
+function allowUserToControlCamera(state) {
+  controls.enablePan = controls.enableRotate = controls.enableZoom = state;
+}
 
 /**
  * Smoothly focuses on an object, by changing the camera position control target
@@ -180,9 +183,12 @@ function getTranslatedTargetPos() {
  * @param targetEndPos the position the camera should look to.
  * @param updateControls if true, the controls will be updated throughout the animation,
  * otherwise they wll only be updated at the end of the animation - this also levels the camera.
+ * @param disableControls if true, completely prevents the user from controlling the camera during the animation,
+ * otherwise just disables rotating.
  * @param duration how long to take in milliseconds.
  */
-function smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraEndPos, targetEndPos, updateControls, duration = 1000) {
+export function smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraEndPos, targetEndPos, updateControls,
+                                   duration = 1000, disableControls = false) {
   if (!cameraStartPos) throw `Bad cameraStartPos: ${cameraStartPos}`;
   if (!targetStartPos) throw `Bad targetStartPos: ${targetStartPos}`;
   if (!cameraEndPos) throw `Bad cameraEndPos: ${cameraEndPos}`;
@@ -196,6 +202,7 @@ function smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraEndPos, target
     return;
   }
   animating = true;
+  if (disableControls) allowUserToControlCamera(false)
   controls.enableRotate = false;
   const startTime = performance.now();
 
@@ -222,8 +229,9 @@ function smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraEndPos, target
     // When the animation ends
     else {
       animating = false;
-      controls.enableRotate = true;
       controls.update()
+      if (disableControls) allowUserToControlCamera(true) // Re-enable
+      controls.enableRotate = true;
     }
   }
 
@@ -274,7 +282,7 @@ export function moveToOverviewPos() {
   controls.enablePan = false;
   controls.enableZoom = false;
 
-  smoothlyMoveCamera(camPos, target, overviewPosition, origin, true);
+  smoothlyMoveCamera(camPos, target, overviewPosition, origin, true, 2000, true);
 
   setTimeout(() => {
     controls.enablePan = true;

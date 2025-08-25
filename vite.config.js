@@ -3,7 +3,8 @@ import { defineConfig } from 'vite'
 export default defineConfig((command) => {
   console.log('Command:', command)
 
-  const base = command.mode === 'production' ? '/Portfolio/' : '/'
+  // const base = command.mode === 'production' ? '/Portfolio/' : '/'
+  const base = '/';
 
   return {
     base,

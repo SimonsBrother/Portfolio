@@ -4,9 +4,9 @@ import {smoothlyMoveCamera} from "./focus";
 
 
 const initialCameraPos = new Vector3(0, 40, 80);
-const initialTarget = new Vector3(30, 10, 0);
+const initialTarget = new Vector3(0, 10, 0);
 
-const introCameraStartPos = new Vector3(0, -100, -100);
+const introCameraStartPos = new Vector3(100, -100, -100);
 const introStartTarget = initialTarget.clone();
 
 function rad(degrees){
@@ -57,10 +57,8 @@ function rollCamera(camera, controls, axis, radians) {
 
 export function setupCameraInitialState(camera, controls) {
   camera.position.copy(initialCameraPos); // Set position first
-  // rollCamera(camera, controls, 'X', rad(-15));
-  // rollCamera(camera, controls, 'Z', rad(15));
   rollCamera(camera, controls, 'X', rad(-30));
-  rollCamera(camera, controls, 'Z', rad(110));
+  rollCamera(camera, controls, 'Z', rad(70));
   controls.target.copy(initialTarget);
   camera.updateProjectionMatrix();
   controls.update();
@@ -71,5 +69,4 @@ export function animateCamera() {
   if (cameraAnimationRan) return;
   cameraAnimationRan = true;
   smoothlyMoveCamera(introCameraStartPos, introStartTarget, initialCameraPos, initialTarget, true, 5000, true)
-  smoothlyMoveCamera(initialCameraPos, initialTarget, initialCameraPos, new Vector3(), true, 500, true)
 }

@@ -6,7 +6,7 @@ import {smoothlyMoveCamera} from "./focus";
 const initialCameraPos = new Vector3(0, 40, 80);
 const initialTarget = new Vector3(0, 10, 0);
 
-const introCameraStartPos = new Vector3(100, -100, -100);
+const introCameraStartPos = new Vector3(50, -100, -100);
 const introStartTarget = initialTarget.clone();
 
 function rad(degrees){

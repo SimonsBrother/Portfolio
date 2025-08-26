@@ -56,6 +56,8 @@ export let setTitleFunction = {setTitle: null};
  * @returns {boolean} false if a focus target was found, true if the object or its parents are valid..
  */
 export function handlePossibleFocusTarget(object) {
+  if (animating) return false; // Don't allow focus if animation is happening
+
   if (isObjectValidFocusTarget(object)) {
     setFollowTarget(object);
     return true;
@@ -194,13 +196,8 @@ export function smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraEndPos,
   if (!cameraEndPos) throw `Bad cameraEndPos: ${cameraEndPos}`;
   if (!targetEndPos) throw `Bad targetEndPos: ${targetEndPos}`;
 
-  // If an animation is already playing, delay this one and return
-  if (animating) {
-    setTimeout(() => {
-      smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraEndPos, targetEndPos, updateControls, duration);
-    }, 100);
-    return;
-  }
+  // If an animation is already playing, don't play another (it'll snap and look weird)
+  if (animating) return;
   animating = true;
   if (disableControls) allowUserToControlCamera(false)
   controls.enableRotate = false;
@@ -290,3 +287,8 @@ export function moveToOverviewPos() {
     controls.enableZoom = true;
   }, 1000);
 }
+
+
+setInterval(() => {
+  console.log(animating);
+}, 100)

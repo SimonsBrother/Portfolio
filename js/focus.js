@@ -229,7 +229,7 @@ export function smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraEndPos,
     // When the animation ends
     else {
       animating = false;
-      controls.update()
+      controls.update();
       if (disableControls) allowUserToControlCamera(true) // Re-enable
       controls.enableRotate = true;
     }
@@ -270,7 +270,8 @@ function smoothlyUnfocus() {
 
 
 const overviewPosition = new THREE.Vector3(0, 20, 60)
-const origin = new THREE.Vector3(0, 0, 0)
+const origin = new THREE.Vector3(0.01, 0.01, 0.01)
+// NOTE: Pinching or panning when the target is 0, 0, 0 breaks things (replaced with NaN values eventually, potential div by 0)
 /**
  * Moves the camera from the current position to a defined overview position.
  */

@@ -46,6 +46,10 @@ let animating = false; // Flag that helps process and work around animations
 let cameraStartPos = null; // On focus, this is set to the current camera position
 let targetStartPos = null; // On focus, this is set to a position the camera is currently pointing at
 
+let touchDown = false;
+document.addEventListener("touchstart", () => touchDown = true);
+document.addEventListener("touchend", () => touchDown = false);
+
 // For updating UI
 export let setNavStateFunction = {setFollowing: null, setDefault: null};
 export let setTitleFunction = {setTitle: null};
@@ -173,7 +177,11 @@ function getTranslatedTargetPos() {
   ))
 }
 
-function allowUserToControlCamera(state) {
+export function allowUserToControlCamera(state) {
+  if (state && touchDown) {
+    setTimeout(() => allowUserToControlCamera(state), 100);
+    return;
+  }
   controls.enablePan = controls.enableRotate = controls.enableZoom = state;
 }
 
@@ -199,8 +207,9 @@ export function smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraEndPos,
   // If an animation is already playing, don't play another (it'll snap and look weird)
   if (animating) return;
   animating = true;
+
   if (disableControls) allowUserToControlCamera(false)
-  controls.enableRotate = false;
+  else controls.enableRotate = false; // Must disable rotation
   const startTime = performance.now();
 
   function animate() {
@@ -228,7 +237,7 @@ export function smoothlyMoveCamera(cameraStartPos, targetStartPos, cameraEndPos,
       animating = false;
       controls.update();
       if (disableControls) allowUserToControlCamera(true) // Re-enable
-      controls.enableRotate = true;
+      else controls.enableRotate = true;
     }
   }
 
@@ -281,14 +290,4 @@ export function moveToOverviewPos() {
   controls.enableZoom = false;
 
   smoothlyMoveCamera(camPos, target, overviewPosition, origin, true, 2000, true);
-
-  setTimeout(() => {
-    controls.enablePan = true;
-    controls.enableZoom = true;
-  }, 1000);
 }
-
-
-setInterval(() => {
-  console.log(animating);
-}, 100)

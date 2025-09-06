@@ -11,7 +11,8 @@
   /*transform: perspective(300px) rotate3d(0, -0.2, 0, 10deg);*/
 }
 
-.scroll-arrow {
+.scroll-arrow > .material-symbols-outlined {
+  display: none;
   visibility: hidden;
 }
 
@@ -33,6 +34,7 @@
   }
   .scroll-arrow > .material-symbols-outlined {
     visibility: visible;
+    display: block;
     position: static;
 
     color: white;

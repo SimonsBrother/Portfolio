@@ -1,6 +1,12 @@
 import React, {useState} from 'react';
 import { createRoot } from 'react-dom/client';
-import {moveToOverviewPos, setFollowTarget, setNavStateFunction, stopFollowing} from "./focus";
+import {
+  handlePossibleFocusTarget,
+  moveToOverviewPos,
+  setFollowTarget,
+  setNavStateFunction,
+  stopFollowing
+} from "./focus";
 import {Planet} from "./planets";
 import {planetJsons} from "./loadPlanets";
 
@@ -59,7 +65,7 @@ function Sidebar({planetJsonsToShow}) {
 
   // Create planet entries from JSON
   const planetEntries = planetJsonsToShow.map((planetJson, index) => <PlanetEntry text={planetJson.name}
-                                                                                  onClick={() => setFollowTarget(Planet.planets[index].model)}
+                                                                                  onClick={() => handlePossibleFocusTarget(Planet.planets[index].model)}
                                                                                   imageUrl={planetJson.iconPath}
                                                                                   key={index} />)
 

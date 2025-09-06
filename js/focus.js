@@ -53,6 +53,7 @@ document.addEventListener("touchend", () => touchDown = false);
 // For updating UI
 export let setNavStateFunction = {setFollowing: null, setDefault: null};
 export let setTitleFunction = {setTitle: null};
+export let setVisibleFunction = {setVisible: null};
 
 /**
  * Checks if the object or its parent is valid, and starts following it if it is.
@@ -97,8 +98,9 @@ export function setFollowTarget(object) {
   if (!object) throw `Bad object ${object}`;
   dimParticles();
   followTarget = object;
-  if (setNavStateFunction.setFollowing) setNavStateFunction.setFollowing(); // 2 is following state
+  if (setNavStateFunction.setFollowing) setNavStateFunction.setFollowing(2); // 2 is following state
   if (setTitleFunction.setTitle) setTitleFunction.setTitle(followTarget.userData.planetJson.name);
+  if (setVisibleFunction.setVisible) setVisibleFunction.setVisible(true);
   controls.enablePan = false;
   controls.enableZoom = false;
 
@@ -116,7 +118,7 @@ export function setFollowTarget(object) {
  */
 export function stopFollowing() {
   followTarget = null;
-  if (setTitleFunction.setTitle) setTitleFunction.setTitle("");
+  if (setVisibleFunction.setVisible) setVisibleFunction.setVisible(false);
 
   outlinePass.selectedObjects = [];
   undimParticles();

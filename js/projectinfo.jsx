@@ -1,24 +1,25 @@
 import React, {useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import {setTitleFunction} from "./focus";
+import {setTitleFunction, followTarget, setVisibleFunction} from "./focus";
 import {Planet} from "./planets";
 import {planetJsons} from "./loadPlanets";
 
 
 function ProjectTitle() {
   const [title, setTitle] = useState('');
+  const [visible, setVisible] = useState(false);
   setTitleFunction.setTitle = setTitle;
-  const visibility = title === '' ? 'hidden' : 'visible'
+  setVisibleFunction.setVisible = setVisible;
 
-  return <div style={ {visibility} }>
-    <div className="infobox title border quasar-border">
+  return <div>
+    <div className={ "infobox title border quasar-border " + (visible ? 'showTitle' : '') }>
       <h1 className="info">
         { title }
       </h1>
     </div>
 
     <div className="scroll-arrow">
-      <i className="material-symbols-outlined" style={ {visibility} }>arrow_drop_down</i>
+      <i className={ "material-symbols-outlined " + (visible ? 'showArrow' : '') }>arrow_drop_down</i>
     </div>
   </div>
 }

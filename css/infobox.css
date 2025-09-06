@@ -1,6 +1,18 @@
 .infobox {
   background: rgba(0, 0, 0, 0.5);
   padding: 0.1em 2em; /* Top and bottom, sides */
+
+  transform: rotateX(-90deg);
+  transition: transform 0.2s;
+}
+
+.showTitle {
+  /*visibility: visible;*/
+  transform: rotateX(0deg);
+}
+
+.showArrow {
+  transform: translateY(0) !important;
 }
 
 .title {
@@ -30,7 +42,6 @@
     margin: 0 2em;
 
     font-size: 1em;
-    transform: none;
   }
   .scroll-arrow > .material-symbols-outlined {
     visibility: visible;
@@ -40,6 +51,9 @@
     color: white;
     font-size: 5em;
     text-shadow: 0 0 5px black;
+
+    transform: translateY(100%);
+    transition: transform 0.2s;
   }
 }
 
